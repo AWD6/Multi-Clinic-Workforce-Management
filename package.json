@@ -1,0 +1,14 @@
+{
+  "name": "opd2-workforce-management",
+  "version": "3.3.0",
+  "private": true,
+  "type": "module",
+  "description": "OPD 2 Workforce Management with a shared central database",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check opd2-data-store.js && node --check script.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

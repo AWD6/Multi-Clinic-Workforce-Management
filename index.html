@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="ระบบวางแผนกำลังคนหลายหน่วยตรวจและห้องตรวจ" />
+    <title>Multi Clinic Workforce Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="เมนูหลัก">
+        <div class="brand">
+          <div class="brand-mark">WF</div>
+          <div>
+            <strong>Workforce</strong>
+            <span>Multi Clinic Workforce Management</span>
+          </div>
+        </div>
+
+        <p class="nav-label">เมนูหลัก</p>
+        <nav class="nav-list">
+          <button class="nav-item is-active" data-scroll="dashboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6v6H4V5Zm10 0h6v6h-6V5ZM4 15h6v4H4v-4Zm10 0h6v4h-6v-4Z" fill="currentColor"/></svg>
+            วางแผนกำลังคน
+          </button>
+          <button class="nav-item" data-scroll="planning">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16" /></svg>
+            ปฏิทินคลินิก
+          </button>
+          <button class="nav-item" data-scroll="summary">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V6M4 18h16"/><path d="m7 14 3-4 3 2 5-6"/></svg>
+            ภาพรวมของแต่ละหน่วย/ห้องตรวจ
+          </button>
+                      <button class="nav-item" data-scroll="assignments">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 13h6M8 17h4"/></svg>
+              ตารางจ่ายงาน
+            </button>
+            <button class="nav-item" data-scroll="records">
+
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12a2 2 0 0 1 2 2v14H4V6a2 2 0 0 1 2-2Z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+            บันทึกข้อมูล
+          </button>
+          <button class="nav-item" data-scroll="guide">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.8 9.2a2.35 2.35 0 1 1 3.7 1.9c-.9.6-1.5 1.1-1.5 2.4M12 16.8h.01"/></svg>
+            คู่มือการใช้งาน
+          </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <div class="privacy-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.3-2.8 8.1-7 9.7C7.8 19.1 5 15.3 5 11V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+            <div>
+              <strong>พร้อมสำหรับการเปิดคลินิก</strong>
+              <span>ข้อมูลเก็บในเบราว์เซอร์เครื่องนี้ ใช้งานในเครื่องนี้ด้วย Local Storage</span>
+            </div>
+          </div>
+          <button class="reset-link" id="resetAll">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6L4 8.7"/><path d="M4 4v4.7h4.7"/></svg>
+            คืนค่าเริ่มต้น
+          </button>
+          <div class="credit-banner">
+            <span>OPD - ER</span>
+            <b>conceived, designed, and<br />Brought to Life by RN.Patipon Wiyo</b>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content" id="dashboard">
+        <header class="topbar">
+          <div class="mobile-brand">
+            <div class="brand-mark small">WF</div>
+            <strong>Workforce Management</strong>
+          </div>
+          <div class="breadcrumb">ระบบจัดสรรกำลังคน <span>/</span> Multi Clinic Workforce Management</div>
+          <div class="updated-time">
+            <span>อัปเดตล่าสุด วันนี้ <strong id="liveClock">--:--</strong></span>
+          </div>
+        </header>
+
+        <div class="page-wrap">
+          <section class="hero">
+            <div>
+              <div class="eyebrow"><i></i> Planning workspace</div>
+              <h1>วางแผนกำลังคน<br class="desktop-only" /> ให้พร้อมก่อนเปิดคลินิก</h1>
+              <p>มองเห็นความต้องการผู้รับบริการและภาระของทีมในแต่ละวัน เพื่อจัดกำลังคนให้พอดีกับงานอย่างมั่นใจ</p>
+            </div>
+            <div class="week-picker-wrap">
+              <button class="week-button" id="weekButton" aria-expanded="false" aria-controls="weekPicker">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+                <span id="weekLabel">สัปดาห์ปัจจุบัน</span>
+                <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+              <div class="week-picker" id="weekPicker" hidden>
+                <label for="weekInput">เลือกสัปดาห์จากปฏิทินเครื่อง</label>
+                <input id="weekInput" type="week" />
+                <div class="week-picker-actions">
+                  <button type="button" class="text-button" id="previousWeek">สัปดาห์ก่อน</button>
+                  <button type="button" class="text-button" id="nextWeek">สัปดาห์ถัดไป</button>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="selector-card"><div><label for="unitSelect">หน่วยตรวจ</label><select id="unitSelect"></select></div><div><label for="clinicSelect">ห้องตรวจ / พื้นที่</label><select id="clinicSelect"></select></div><div class="selection-hint"><b id="selectedScope">—</b><span>ข้อมูลการจ่ายงานจะแยกเก็บตามพื้นที่นี้</span></div></section>
+
+
+          <section class="metric-grid" aria-label="ภาพรวมสัปดาห์">
+            <article class="metric-card">
+              <div class="metric-icon teal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM16 4.5a3.5 3.5 0 0 1 0 6.8M16.5 15h1a3.5 3.5 0 0 1 3.5 3.5V20"/></svg></div>
+              <span class="metric-label">ผู้รับบริการที่คาดการณ์</span>
+              <strong class="metric-value" id="totalDemand">0</strong>
+              <small id="demandDetail">0 วันทำการ · รวมทุกช่องทาง</small>
+            </article>
+            <article class="metric-card">
+              <div class="metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l8-5 8 5v11M8 20v-6h8v6M3 20h18"/></svg></div>
+              <span class="metric-label">เจ้าหน้าที่ประจำทั้งหมด</span>
+              <strong class="metric-value" id="totalStaff">11</strong>
+              <small id="staffDetail">RN/HN/Incharge/PN/HP</small>
+              <div class="metric-breakdown" id="staffBreakdown"></div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-icon amber"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg></div>
+              <span class="metric-label">วันที่วางแผน</span>
+              <strong class="metric-value" id="plannedDays">0 / 5</strong>
+              <small id="holidayDetail">0 วันหยุดที่ไม่นำมาคำนวณ</small>
+            </article>
+            <article class="metric-card">
+              <div class="metric-icon violet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg></div>
+              <span class="metric-label">ความพร้อมเฉลี่ย</span>
+              <strong class="metric-value" id="averageProduct">—</strong>
+              <small id="averageDetail">กดคำนวณเพื่อดูภาพรวม</small>
+            </article>
+          </section>
+<button class="inline-button" id="viewReport">ดูรายงาน</button>
+          </div>
+
+          <section class="data-card" id="planning">
+            <div class="card-header">
+              <div>
+                <div class="title-row"><h2>แผนผู้รับบริการรายวัน</h2><span class="editable-pill">แก้ไขได้</span></div>
+                <p>ระบุจำนวนผู้รับบริการที่คาดการณ์เพื่อประเมินความพร้อมของแต่ละวัน</p>
+              </div>
+              <span class="helper-text"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg> เลือกวันหยุดเพื่อไม่นำไปคำนวณ</span>
+            </div>
+            <div class="planning-banner" aria-label="แผนผู้รับบริการรายวัน">
+              <div class="planning-banner-copy"><span class="planning-banner-kicker">DAILY PLAN</span><strong>แผนผู้รับบริการรายวัน</strong><small>จัดเตรียมข้อมูลผู้รับบริการให้พร้อมสำหรับทุกวันทำการ</small></div>
+              <div class="planning-banner-days" aria-hidden="true"><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span></div>
+            </div>
+            <div class="table-scroll">
+              <div class="planning-table">
+                <div class="table-row table-head planning-columns">
+                  <div>วันทำการ</div><div>นัดหมาย</div><div>Walk-in</div><div>นอกระบบ</div><div>รวมผู้รับบริการ</div><div>สถานะวัน</div>
+                </div>
+                <div id="planningRows"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="data-card assignment-card" id="assignments">
+            <div class="card-header">
+              <div>
+                <div class="title-row"><h2>ตารางจ่ายงานรายบุคคล</h2><span class="editable-pill">เชื่อมโยงข้อมูล</span></div>
+                <p>จ่ายงานรายบุคคลก่อนการจัดสรรกำลังคน ระบบจะเชื่อม VAC/กิจกรรมกลับไปคำนวณ Workforce ให้อัตโนมัติ และสร้าง PDF ได้ทั้งสัปดาห์</p>
+              </div>
+              <div class="assignment-actions"><div class="week-assignment-picker"><span class="week-label">จ่ายงานรายสัปดาห์</span><div id="assignmentWeekLabel"></div><div class="week-day-buttons" id="assignmentDayButtons"></div></div><button class="primary-button compact" id="generatePdfButton">สร้าง PDF รายสัปดาห์</button></div>
+            </div>
+            <div class="assignment-toolbar forecast-toolbar"><label class="forecast-field">ยอดคาดการณ์ผู้ป่วยวันนี้ <input id="dailyForecast" type="number" min="0" /></label><span>ข้อมูลการจ่ายงานจะถูกจำเป็น Default และนำไปคำนวณกำลังคนอัตโนมัติ</span><button class="secondary-button compact" id="applyDefaultAssignments">ใช้ Default</button></div>
+<div class="table-scroll">
+              <div class="assignment-table">
+                <div class="assignment-head"><span>ชื่อ / ตำแหน่ง</span><span>สถานะการปฏิบัติงาน</span><span>เวลาพัก</span><span>หน้าที่ / เวลา</span><span>ปภ.1/2</span><span>Code อัคคีภัย / CPR</span><span>เวลามา / หมายเหตุ</span></div>
+                <div id="assignmentRows"></div>
+              </div>
+            </div>
+          </section>
+
+
+
+          <section class="data-card" id="staff"><div class="card-header"><div><div class="title-row"><h2>จัดการเจ้าหน้าที่</h2><span class="editable-pill">เพิ่มได้ไม่จำกัด</span></div><p>เพิ่มเจ้าหน้าที่แยกตามหน่วยตรวจและห้องตรวจย่อย ข้อมูลจะถูกใช้เป็น Default ในการจ่ายงาน</p></div></div><form class="staff-form" id="staffForm"><input id="staffName" required placeholder="ชื่อเจ้าหน้าที่" /><select id="staffRole"><option value="HN">HN</option><option value="Incharge">Incharge</option><option value="RN">RN</option><option value="PN">PN</option><option value="HP">HP</option></select><button class="primary-button compact">+ เพิ่มเจ้าหน้าที่</button></form><div id="staffList" class="staff-list"></div></section>
+          <section class="data-card" id="allocation">
+            <div class="card-header">
+              <div>
+                <div class="title-row"><h2>การจัดสรรกำลังคน</h2><span class="editable-pill">แก้ไขได้</span></div>
+                <p>สถานะเจ้าหน้าที่ดึงตรงจากตารางจ่ายงานรายบุคคล แยก HN/Incharge/RN เป็นพยาบาล, PN และ HP เพื่อคำนวณกำลังคน</p>
+              </div>
+              <div class="role-legend">
+                <span class="role-dot nurse-dot">Nurse</span><span class="role-dot pn-dot">PN</span><span class="role-dot hp-dot">HP</span>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <div class="staffing-table">
+                <div class="table-row table-head staffing-columns">
+                  <div>วันทำการ</div><div class="nurse-head">Nurse</div><div class="pn-head">PN</div><div class="hp-head">HP</div>
+                </div>
+                <div id="staffingRows"></div>
+              </div>
+            </div>
+            <div id="allocationSummary" class="allocation-summary"></div><div class="allocation-note">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+              <span>กรอกกิจกรรมเป็น “ชั่วโมง” ไม่ใช่จำนวนคน ระบบจะนำเวลาลา อบรม/ประชุม Float ออก และเก็บชั่วโมงมาพิจารณาความพร้อม โดยไม่รวมบุคลากรช่วยเหลือจากหน่วยงานอื่น<br><b>คำอธิบาย Code และสถานที่</b><br>C1 สื่อสาร/ประสานงาน · C2 เคลื่อนย้าย · C3 ดับเพลิง<br>P1 ควบคุมสั่งการ · P2 AED/Defibrillator · P3 สารน้ำ/ยา/เจาะเลือด · P4 บันทึก CPR · P5 ทางเดินหายใจ · P6 chest compression<br>A ตามแพทย์/ประสานงาน: RR team โทร 38799 · ER โทร 36333 · เปล/เคลื่อนย้าย โทร 35692–35693</span>
+            </div>
+
+          </section>
+
+          <section class="data-card dashboard-card" id="summary"><div class="card-header"><div><div class="title-row"><h2>Dashboard สรุปทุกหน่วยตรวจ</h2><span class="editable-pill">ภาพรวมของแต่ละหน่วย/ห้องตรวจ</span></div><p>ดูผู้ป่วยคาดการณ์ กำลังคน Product และรายละเอียดการจัดสรรของทุกพื้นที่ในสัปดาห์เดียวกัน</p></div></div><div id="allUnitsSummary" class="all-units-summary"></div></section>
+          <section class="action-bar">
+            <div class="action-copy"><div class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></svg></div><div><strong>พร้อมดูภาพรวมของสัปดาห์นี้แล้วหรือยัง</strong><span>ระบบจะคำนวณความพร้อมจากข้อมูลล่าสุดที่คุณกรอก</span></div></div>
+            <div class="action-buttons"><button class="secondary-button" id="resetWeek">รีเซ็ตสัปดาห์นี้</button><button class="primary-button" id="calculateButton">คำนวณความพร้อม <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>
+          </section>
+
+          <section class="records-section" id="records">
+            <div class="section-heading records-heading">
+              <div><h2>บันทึกข้อมูลรายสัปดาห์</h2><p>เก็บรายละเอียดทั้งหมดของ Week เพื่อย้อนดู Product จำนวนเจ้าหน้าที่ แผนผู้รับบริการ และการจัดสรรกำลังคนในแต่ละวัน</p></div>
+              <button class="primary-button compact" id="saveRecord">บันทึกสัปดาห์นี้</button>
+            </div>
+            <div id="recordsList" class="records-list"></div>
+          </section>
+
+          <section class="guide-section" id="guide">
+            <div class="section-heading"><div><h2>เกณฑ์การอ่านความพร้อม</h2><p>ใช้เป็นแนวทางประกอบการตัดสินใจ ไม่แทนการพิจารณาของหัวหน้าหน่วยงาน</p></div></div>
+            <div class="guide-grid">
+              <div class="guide-item healthy"><i></i><div><strong>บุคลากรเหมาะสมกับงาน</strong><span>ทีมมีสัดส่วนกำลังคนพอดีกับภาระงาน (85–115%)</span></div></div>
+              <div class="guide-item low"><i></i><div><strong>บุคลากรมากกว่างาน</strong><span>กำลังคนเหลือ (&lt; 85%) พิจารณาปรับแผนหรือสนับสนุนหน่วยงานข้างเคียง</span></div></div>
+              <div class="guide-item high"><i></i><div><strong>งานมากกว่าบุคลากร</strong><span>ต้องเฝ้าระวัง (&gt; 115%) ตรวจสอบจำนวนคนลาและปรับแผนก่อนเปิดคลินิก</span></div></div>
+            </div>
+          </section>
+
+          <footer class="footer"><span>Multi Clinic Workforce Management</span><span>ข้อมูลจัดเก็บใน Local Storage เท่านั้น</span></footer>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="reportModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+        <button class="modal-close" id="closeModal" aria-label="ปิด"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+        <div class="modal-kicker">Weekly workforce report</div>
+        <h2 id="reportTitle">รายงานความพร้อมกำลังคน</h2>
+        <p id="reportSummary"></p>
+        <div class="report-stats"><div><span>ค่าเฉลี่ย</span><strong id="reportAverage">—</strong></div><div><span>เหมาะสม</span><strong id="reportHealthy">0 วัน</strong></div><div><span>ต้องตรวจสอบ</span><strong id="reportAlerts">0 วัน</strong></div></div>
+        <div class="report-list" id="reportList"></div>
+        <button class="primary-button full" id="dismissReport">รับทราบและกลับไปแก้ไข</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="jspdf.umd.min.js"></script>
+    <script src="html2canvas.min.js"></script>
+    <script src="opd2-config.js"></script>
+    <script src="opd2-data-store.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
