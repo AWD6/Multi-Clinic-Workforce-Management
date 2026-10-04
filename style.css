@@ -1464,7 +1464,7 @@ body { font-size: var(--opd-body-size); }
   .assignment-card .task-line.has-custom-task { grid-template-columns: 16px minmax(0, .75fr) minmax(0, 1.25fr) minmax(0, .9fr); }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .assignment-card .table-scroll { overflow: visible; }
   .assignment-card .assignment-table { min-width: 0 !important; }
   .assignment-card .assignment-head { display: none; }
@@ -2086,10 +2086,15 @@ select,
 }
 
 /* Keep the arrival / signature column fully inside the assignment table. */
-@media(min-width:901px){
-  #assignments .assignment-table{min-width:1240px}
+@media(min-width:1101px){
+  #assignments .assignment-table{width:100%;min-width:0;max-width:100%}
   #assignments .assignment-head,
-  #assignments .assignment-row{grid-template-columns:140px 145px 70px minmax(340px,2.2fr) 82px minmax(190px,1.1fr) 175px}
+  #assignments .assignment-row{
+    grid-template-columns:minmax(76px,.85fr) minmax(98px,1.05fr) minmax(48px,.5fr) minmax(135px,1.8fr) minmax(65px,.65fr) minmax(105px,1.1fr) minmax(88px,.95fr);
+    gap:4px;
+  }
+  #assignments .assignment-head{padding-left:10px;padding-right:10px}
+  #assignments .assignment-row{padding:10px}
   #assignments .assignment-head>span:last-child{white-space:normal;line-height:1.25}
 }
 #assignments .arrival-cell{display:flex;flex-direction:column;gap:6px;min-width:0;width:100%}
