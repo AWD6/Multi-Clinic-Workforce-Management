@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="คู่มือหน้าเดียวสำหรับทดลองใช้ระบบ Multi Clinic Workforce Management" />
+  <title>คู่มือทดลองใช้ · Multi Clinic Workforce Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #3b887d;
+      --green-deep: #315f57;
+      --green-soft: #eaf5f1;
+      --pink: #b9677e;
+      --pink-soft: #fff0f3;
+      --ink: #315f57;
+      --muted: #718780;
+      --line: #deebe6;
+      --paper: #ffffff;
+      --canvas: #f2f7f4;
+      --sans: "IBM Plex Sans Thai", sans-serif;
+      --mono: "Space Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--canvas); scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: radial-gradient(circle at 92% 3%, rgba(185,103,126,.11), transparent 24rem), var(--canvas); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    .page { width: min(1260px, 100%); margin: 0 auto; padding: 26px 28px 22px; }
+    .masthead { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark { display: grid; place-items: center; width: 39px; height: 39px; border: 1px solid rgba(59,136,125,.22); border-radius: 13px; color: var(--green); background: linear-gradient(145deg,#fff,#e9f5f1); box-shadow: 0 8px 18px -14px #315f57; font-weight: 800; font-size: 13px; }
+    .brand-name { font-size: 12px; font-weight: 800; letter-spacing: .01em; }
+    .brand-sub { display: block; margin-top: 1px; color: var(--muted); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+    .tools { display: flex; gap: 8px; }
+    .tool-link, .print-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 13px; border: 1px solid var(--line); border-radius: 10px; text-decoration: none; background: #fff; color: var(--green-deep); font: 600 11px var(--sans); cursor: pointer; }
+    .tool-link.primary { border-color: var(--green); color: #fff; background: var(--green); box-shadow: 0 7px 15px -10px var(--green); }
+    .hero { position: relative; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 20px; overflow: hidden; min-height: 122px; padding: 22px 26px; border-radius: 20px; color: #fff; background: linear-gradient(112deg,#327c71 0%,#4b9889 62%,#bb7187 100%); box-shadow: 0 16px 35px -25px rgba(49,95,87,.65); }
+    .hero::after { position: absolute; right: 115px; top: -70px; width: 210px; height: 210px; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; box-shadow: 0 0 0 22px rgba(255,255,255,.045),0 0 0 48px rgba(255,255,255,.035); content: ""; pointer-events: none; }
+    .eyebrow { margin-bottom: 5px; color: rgba(255,255,255,.78); font: 700 9px var(--mono); letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 0; color: #fff; font-size: clamp(23px,3vw,34px); line-height: 1.2; letter-spacing: -.025em; }
+    .hero p { margin: 7px 0 0; color: rgba(255,255,255,.85); font-size: 12px; }
+    .hero-side { position: relative; z-index: 1; text-align: right; }
+    .hero-side strong { display: block; font: 700 12px var(--mono); letter-spacing: .06em; }
+    .hero-side span { display: block; margin-top: 5px; color: rgba(255,255,255,.78); font-size: 10px; }
+    .flowline { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 13px 0; padding: 9px 12px; border: 1px solid rgba(59,136,125,.13); border-radius: 12px; background: rgba(255,255,255,.78); box-shadow: 0 8px 18px -18px #315f57; }
+    .flowline b { color: var(--green-deep); font-size: 10px; font-weight: 700; }
+    .flowline i { color: #c88798; font: normal 700 12px var(--mono); }
+    .privacy { display: grid; grid-template-columns: 27px minmax(0,1fr) auto; align-items: center; gap: 10px; margin-bottom: 14px; padding: 11px 14px; border: 1px solid #efd6dc; border-radius: 12px; background: linear-gradient(100deg,#fff7f8,#fff 72%); }
+    .privacy-icon { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; color: var(--pink); background: #f8e6eb; font-size: 13px; font-weight: 800; }
+    .privacy strong { display: block; color: #8e5365; font-size: 11px; }
+    .privacy p { margin: 2px 0 0; color: #816f73; font-size: 10px; line-height: 1.45; }
+    .privacy .tag { padding: 5px 9px; border-radius: 99px; color: #8e5365; background: #f9e9ed; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .layout { display: grid; grid-template-columns: minmax(0,1.55fr) minmax(300px,.9fr); gap: 14px; align-items: start; }
+    .section-label { display: flex; align-items: center; gap: 8px; margin: 2px 2px 8px; color: #7a8f89; font: 700 9px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+    .section-label::before { width: 7px; height: 7px; border-radius: 50%; background: var(--pink); box-shadow: 0 0 0 4px rgba(185,103,126,.1); content: ""; }
+    .steps { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+    .card { border: 1px solid rgba(59,136,125,.12); border-radius: 15px; background: rgba(255,255,255,.92); box-shadow: 0 10px 24px -23px rgba(49,95,87,.8); }
+    .step { min-height: 160px; padding: 14px 15px 12px; }
+    .step-head { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+    .number { display: grid; place-items: center; flex: 0 0 27px; width: 27px; height: 27px; border-radius: 9px; color: #fff; background: linear-gradient(135deg,var(--green),#69ad9d); font: 700 12px var(--mono); box-shadow: 0 5px 12px -9px var(--green); }
+    .step:nth-child(2) .number, .step:nth-child(4) .number { background: linear-gradient(135deg,var(--pink),#d28b9e); }
+    h2 { margin: 0; color: var(--green-deep); font-size: 13px; line-height: 1.3; }
+    .step p { margin: 0 0 6px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .step ul { margin: 0; padding-left: 16px; color: #4b6d64; font-size: 10px; line-height: 1.55; }
+    .step li::marker { color: var(--pink); }
+    .pill { display: inline-block; margin: 2px 2px 1px 0; padding: 2px 6px; border-radius: 99px; color: #477b70; background: #edf7f3; font-size: 9px; font-weight: 700; }
+    .right-stack { display: grid; gap: 10px; }
+    .panel { padding: 13px 15px; }
+    .panel h2 { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+    .panel h2 .mini-icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; color: var(--pink); background: var(--pink-soft); font-size: 11px; }
+    .thresholds { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+    .threshold { min-height: 62px; padding: 8px 7px; border: 1px solid var(--line); border-radius: 10px; background: #fbfdfc; text-align: center; }
+    .threshold b { display: block; font: 700 11px var(--mono); }
+    .threshold span { display: block; margin-top: 3px; color: var(--muted); font-size: 8.5px; line-height: 1.3; }
+    .threshold.low b { color: #ae7b36; }
+    .threshold.ok b { color: var(--green); }
+    .threshold.high b { color: var(--pink); }
+    .panel ul { margin: 0; padding-left: 16px; color: #59776e; font-size: 10px; line-height: 1.55; }
+    .panel li + li { margin-top: 2px; }
+    .test-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px 10px; }
+    .test-item { display: flex; align-items: flex-start; gap: 6px; color: #59776e; font-size: 9px; line-height: 1.4; }
+    .check { display: grid; place-items: center; flex: 0 0 14px; width: 14px; height: 14px; margin-top: 1px; border: 1px solid #9ccfc1; border-radius: 4px; color: var(--green); background: #f2faf7; font-size: 9px; font-weight: 800; }
+    .reset-note { margin-top: 8px; padding: 7px 9px; border-left: 3px solid #d9a0ad; border-radius: 7px; color: #795d65; background: #fff5f7; font-size: 9px; line-height: 1.45; }
+    .footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 13px; padding: 10px 13px; border: 1px solid rgba(59,136,125,.12); border-radius: 11px; background: linear-gradient(100deg,#eaf5f1,#fff 58%,#fff0f3); }
+    .footer strong { color: var(--green-deep); font-size: 10px; }
+    .footer span { color: var(--muted); font-size: 9px; }
+    .footer .brandline { font: 700 8px var(--mono); letter-spacing: .04em; color: #8c9c96; white-space: nowrap; }
+    @media (max-width: 900px) {
+      .page { padding: 18px 16px; }
+      .layout { grid-template-columns: 1fr; }
+      .right-stack { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .panel:last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 620px) {
+      .page { padding: 12px; }
+      .masthead { align-items: flex-start; }
+      .tools { flex-direction: column; }
+      .tool-link,.print-button { min-height: 31px; padding: 5px 9px; font-size: 9px; }
+      .hero { grid-template-columns: 1fr; gap: 10px; padding: 18px; }
+      .hero-side { text-align: left; }
+      .hero-side span { display: inline; margin-left: 5px; }
+      .flowline { flex-wrap: wrap; justify-content: flex-start; }
+      .privacy { grid-template-columns: 27px minmax(0,1fr); }
+      .privacy .tag { grid-column: 2; justify-self: start; }
+      .steps,.right-stack { grid-template-columns: 1fr; }
+      .panel:last-child { grid-column: auto; }
+      .step { min-height: auto; }
+      .footer { align-items: flex-start; flex-direction: column; }
+    }
+    @media (min-width: 901px) {
+      .privacy p, .step p, .step ul, .panel ul { font-size: 11px; line-height: 1.58; }
+      .test-item, .reset-note { font-size: 10px; }
+      .threshold span { font-size: 9px; }
+    }
+    @page { size: A4 landscape; margin: 7mm; }
+    @media print {
+      html,body { background: #fff !important; }
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .page { width: 100%; max-width: none; padding: 0; }
+      .masthead { margin-bottom: 7px; }
+      .hero { min-height: 88px; padding: 13px 18px; border-radius: 12px; }
+      .hero p { margin-top: 4px; font-size: 9px; }
+      .flowline { margin: 7px 0; padding: 6px 8px; }
+      .privacy { margin-bottom: 7px; padding: 7px 10px; }
+      .layout { grid-template-columns: 1.55fr .9fr; gap: 8px; }
+      .steps,.right-stack { gap: 6px; }
+      .step { min-height: 0; padding: 9px 10px; }
+      .panel { padding: 8px 10px; }
+      .footer { margin-top: 7px; padding: 6px 9px; }
+      a { text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <div class="brand">
+        <div class="brand-mark">WF</div>
+        <div><div class="brand-name">Multi Clinic Workforce Management</div><span class="brand-sub">คู่มือสำหรับผู้ทดลองใช้</span></div>
+      </div>
+      <div class="tools">
+        <a class="tool-link primary" href="./">เปิดระบบทดลอง <span aria-hidden="true">↗</span></a>
+        <button class="print-button" type="button" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">QUICK START · TEST GUIDE</div>
+        <h1>คู่มือทดลองใช้ระบบวางแผนกำลังคน</h1>
+        <p>ทดลองหนึ่งสัปดาห์ให้ครบวงจร ตั้งแต่แผนผู้รับบริการ การจ่ายงาน ไปจนถึงตรวจผลและรายงาน</p>
+      </div>
+      <div class="hero-side"><strong>5 ขั้นตอน · ประมาณ 10 นาที</strong><span>ใช้ข้อมูลสมมติ ไม่ใช้ข้อมูลผู้ป่วยจริง</span></div>
+    </section>
+
+    <div class="flowline" aria-label="ลำดับการทดลอง">
+      <b>เลือกพื้นที่/สัปดาห์</b><i>›</i><b>ใส่ยอดผู้รับบริการ</b><i>›</i><b>เพิ่มทีม</b><i>›</i><b>จ่ายงานรายวัน</b><i>›</i><b>คำนวณและตรวจผล</b>
+    </div>
+
+    <aside class="privacy">
+      <div class="privacy-icon" aria-hidden="true">!</div>
+      <div><strong>ข้อมูลจัดเก็บในเบราว์เซอร์เครื่องนี้เท่านั้น</strong><p>ข้อมูลไม่ซิงก์ข้ามผู้ใช้หรืออุปกรณ์ โปรดใช้ชื่อและตัวเลขจำลอง และอย่ากรอกชื่อผู้ป่วย เลข HN หรือข้อมูลส่วนบุคคล</p></div>
+      <span class="tag">Local Storage</span>
+    </aside>
+
+    <div class="layout">
+      <section>
+        <div class="section-label">เริ่มใช้งานทีละขั้น</div>
+        <div class="steps">
+          <article class="card step">
+            <div class="step-head"><span class="number">01</span><h2>เลือกหน่วยตรวจ ห้องตรวจ และสัปดาห์</h2></div>
+            <p>เริ่มจากตัวเลือกด้านบนของหน้า ระบบแยกข้อมูลตามหน่วยตรวจและห้องตรวจที่เลือก</p>
+            <ul><li>เลือกสัปดาห์ด้วยปุ่มวันที่ แล้วเลือกจากปฏิทิน หรือใช้ “สัปดาห์ก่อน/ถัดไป”</li><li>แผนเริ่มต้นเป็นวันจันทร์–ศุกร์; เลือกพื้นที่ให้ถูกก่อนกรอกข้อมูล</li></ul>
+          </article>
+          <article class="card step">
+            <div class="step-head"><span class="number">02</span><h2>กรอกแผนผู้รับบริการรายวัน</h2></div>
+            <p>ใน “แผนผู้รับบริการรายวัน” ใส่จำนวนแยกประเภทในแต่ละวัน</p>
+            <ul><li><span class="pill">นัดหมาย</span><span class="pill">Walk-in</span><span class="pill">นอกระบบ</span></li><li>ระบบรวมยอดให้อัตโนมัติ; กด “ตั้งเป็นวันหยุด” เพื่อไม่นำวันนั้นไปคำนวณ</li></ul>
+          </article>
+          <article class="card step">
+            <div class="step-head"><span class="number">03</span><h2>เพิ่มรายชื่อทีมในพื้นที่</h2></div>
+            <p>ไปที่ “จัดการเจ้าหน้าที่” เพิ่มด้วยชื่อสมมติและตำแหน่ง</p>
+            <ul><li>ตำแหน่งที่รองรับ: <span class="pill">HN</span><span class="pill">Incharge</span><span class="pill">RN</span><span class="pill">PN</span><span class="pill">HP</span></li><li>ใช้ “แก้ไข” เปลี่ยนชื่อ/ตำแหน่งได้โดยไม่ต้องลบ; กด “ลบ” เมื่อต้องการนำชื่อออก</li><li>รายชื่อแยกตามหน่วย/ห้องตรวจ; เพิ่มทีมแยกกันในแต่ละพื้นที่</li></ul>
+          </article>
+          <article class="card step">
+            <div class="step-head"><span class="number">04</span><h2>จ่ายงานและสถานะรายวัน</h2></div>
+            <p>เลือกวันใน “ตารางจ่ายงานรายบุคคล” แล้วตั้งข้อมูลของเจ้าหน้าที่แต่ละคน</p>
+            <ul><li>เลือกสถานะ <span class="pill">ปฏิบัติงาน</span><span class="pill">VAC = ลา</span><span class="pill">ประชุม/อบรม</span><span class="pill">Float ออก</span><span class="pill">ใช้ ชม.</span></li><li>เลือกหน้าที่/เวลา (พิมพ์ช่วงเช่น 8-12), เวลาพัก, ปภ.1/2, Code อัคคีภัย/CPR, เวลาเข้าและหมายเหตุ</li><li>“เพิ่มหน้าที่” เพิ่มรายการ; “ใช้ Default” นำรูปแบบที่บันทึกล่าสุดมาใช้กับวันนั้น</li></ul>
+          </article>
+        </div>
+      </section>
+
+      <aside>
+        <div class="section-label">ตรวจผลและส่งข้อเสนอแนะ</div>
+        <div class="right-stack">
+          <section class="card panel">
+            <h2><span class="mini-icon">↗</span>คำนวณและอ่านค่า Product</h2>
+            <ul><li>กด “คำนวณความพร้อม” หลังกรอกข้อมูล ระบบคำนวณจากยอดผู้รับบริการและกำลังคน/ชั่วโมงที่ลงไว้</li></ul>
+            <div class="thresholds" style="margin-top:8px">
+              <div class="threshold low"><b>&lt; 85%</b><span>กำลังคนมากกว่างาน<br />พิจารณาปรับ/ช่วยหน่วยอื่น</span></div>
+              <div class="threshold ok"><b>85–115%</b><span>สัดส่วนกำลังคน<br />เหมาะสมกับงาน</span></div>
+              <div class="threshold high"><b>&gt; 115%</b><span>งานมากกว่าคน<br />ควรตรวจสอบแผน</span></div>
+            </div>
+            <ul style="margin-top:7px"><li>VAC นับเป็นวันลา; ประชุม/อบรม, Float ออก และใช้ ชม. กรอกเป็นช่วงเวลา/ชั่วโมงตามหน้าจอ</li></ul>
+          </section>
+          <section class="card panel">
+            <h2><span class="mini-icon">▦</span>ดูภาพรวม บันทึก และส่งออก</h2>
+            <ul><li><b>Dashboard สรุปทุกหน่วยตรวจ</b> ดูภาพรวมแต่ละห้องและกด “Detail +” เพื่อขยายรายละเอียด</li><li><b>ดูรายงาน</b> เปิดสรุป Product รายวันและจำนวนวันที่อยู่ใน/นอกเกณฑ์</li><li><b>บันทึกสัปดาห์นี้</b> เพิ่มรายการสรุปไว้ในประวัติของเบราว์เซอร์เครื่องนี้</li><li><b>สร้าง PDF รายสัปดาห์</b> ดาวน์โหลดตารางจ่ายงานของวันทำการ (ไม่รวมวันที่ตั้งเป็นวันหยุด)</li></ul>
+          </section>
+          <section class="card panel">
+            <h2><span class="mini-icon">✓</span>เช็กลิสต์ทดสอบสั้น ๆ</h2>
+            <div class="test-list">
+              <div class="test-item"><span class="check">✓</span><span>ใส่ยอดสมมติอย่างน้อย 2 วัน</span></div>
+              <div class="test-item"><span class="check">✓</span><span>เพิ่มเจ้าหน้าที่ 2–3 คน</span></div>
+              <div class="test-item"><span class="check">✓</span><span>ลองสถานะลา/อบรม/Float</span></div>
+              <div class="test-item"><span class="check">✓</span><span>คำนวณและตรวจเกณฑ์ Product</span></div>
+              <div class="test-item"><span class="check">✓</span><span>ลองวันหยุดและดูผลที่เปลี่ยน</span></div>
+              <div class="test-item"><span class="check">✓</span><span>เปิด Dashboard หรือสร้าง PDF</span></div>
+            </div>
+            <div class="reset-note"><b>ก่อนรีเซ็ต:</b> “รีเซ็ตสัปดาห์นี้” ล้างแผนผู้รับบริการของสัปดาห์ที่เลือก ส่วน “คืนค่าเริ่มต้น” ล้างข้อมูล Local Storage ทั้งหมดในเบราว์เซอร์นี้</div>
+          </section>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="footer">
+      <div><strong>ขอบคุณที่ช่วยทดลองใช้</strong><span> หากพบปัญหา โปรดแจ้งเมนู/ขั้นตอนที่ทำ ผลที่คาดหวัง และสิ่งที่เกิดขึ้น โดยใช้ข้อมูลสมมติ</span></div>
+      <span class="brandline">OPD · WORKFORCE PLANNING</span>
+    </footer>
+  </main>
+</body>
+</html>

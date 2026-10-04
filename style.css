@@ -2347,3 +2347,20 @@ select,
 .download-pdf .pdf-role-summary.role-hp span{color:#6958a7}
 .download-pdf .print-workforce-summary>.summary-chip.removed{justify-self:end;padding:3px 6px;font-size:6.5px}
 @media(max-width:700px){.download-pdf .pdf-role-summary{grid-template-columns:1.1fr repeat(4,minmax(0,1fr));font-size:6px}.download-pdf .pdf-role-summary strong{font-size:6px}}
+
+
+/* Staff roster editing controls */
+#staff .staff-item{gap:10px}
+#staff .staff-item-person{min-width:0;flex:1}
+#staff .staff-item-person strong{overflow-wrap:anywhere}
+#staff .staff-item-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+#staff .staff-item-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:31px;padding:6px 10px;border:1px solid transparent;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+#staff .staff-item-actions .staff-edit-button{color:#315f57;border-color:#cfe4de;background:#eaf5f1}
+#staff .staff-item-actions .staff-delete-button{color:#a95770;border-color:#edc2cc;background:#fff0f3}
+#staff .staff-item-actions .staff-edit-button:hover{border-color:#8fc3b6;background:#dff1ed}
+#staff .staff-item-actions .staff-delete-button:hover{border-color:#d98da3;background:#fae7ec}
+#staff .staff-item-actions button:focus-visible{outline:3px solid rgba(59,136,125,.3);outline-offset:2px}
+#staff .staff-form.is-editing{margin-bottom:14px;padding-top:12px;padding-bottom:12px;border:1px solid #edc2cc;border-radius:12px;background:#fff7f9}
+#staff .staff-form.is-editing #staffName{border-color:#d98da3;box-shadow:0 0 0 3px rgba(185,103,126,.1)}
+#staff .staff-form [hidden]{display:none!important}
+@media(max-width:650px){#staff .staff-item-actions button{min-width:54px}#staff .staff-form button{flex:1}}

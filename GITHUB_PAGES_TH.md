@@ -8,6 +8,7 @@
 2. Push/commit ไปยัง branch `main` หรือ `master` (workflow ตั้งให้ทำงานกับสองชื่อนี้) หรือสั่งด้วยตนเองจากแท็บ **Actions** ผ่าน `workflow_dispatch`
 3. เปิด **Settings → Pages → Build and deployment** แล้วตั้ง **Source** เป็น **GitHub Actions**
 4. เปิดแท็บ **Actions** เลือก workflow “Deploy OPD 2 Workforce to GitHub Pages” แล้วตรวจให้การรันจบด้วยสถานะสำเร็จ จากนั้นเปิด URL ที่แสดงใน deployment/environment
+5. แชร์คู่มือหน้าเดียวให้ผู้ทดลองใช้ได้ที่ `https://OWNER.github.io/REPOSITORY/USER_GUIDE_TH.html` (แทน `OWNER/REPOSITORY` ด้วยชื่อจริง) หรือเติม `/USER_GUIDE_TH.html` ต่อท้าย URL ของ deployment
 
 > Workflow รุ่นนี้ไม่ต้องตั้งค่า Repository Variables `OPD2_SHEETS_API_URL` หรือ `OPD2_API_BASE` เพราะแอปปัจจุบันใช้ Local Storage เท่านั้น
 

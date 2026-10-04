@@ -178,7 +178,7 @@
 
 
 
-          <section class="data-card" id="staff"><div class="card-header"><div><div class="title-row"><h2>จัดการเจ้าหน้าที่</h2><span class="editable-pill">เพิ่มได้ไม่จำกัด</span></div><p>เพิ่มเจ้าหน้าที่แยกตามหน่วยตรวจและห้องตรวจย่อย ข้อมูลจะถูกใช้เป็น Default ในการจ่ายงาน</p></div></div><form class="staff-form" id="staffForm"><input id="staffName" required placeholder="ชื่อเจ้าหน้าที่" /><select id="staffRole"><option value="HN">HN</option><option value="Incharge">Incharge</option><option value="RN">RN</option><option value="PN">PN</option><option value="HP">HP</option></select><button class="primary-button compact">+ เพิ่มเจ้าหน้าที่</button></form><div id="staffList" class="staff-list"></div></section>
+          <section class="data-card" id="staff"><div class="card-header"><div><div class="title-row"><h2>จัดการเจ้าหน้าที่</h2><span class="editable-pill">เพิ่มได้ไม่จำกัด</span></div><p>เพิ่มเจ้าหน้าที่แยกตามหน่วยตรวจและห้องตรวจย่อย ข้อมูลจะถูกใช้เป็น Default ในการจ่ายงาน</p></div></div><form class="staff-form" id="staffForm"><input id="staffName" required placeholder="ชื่อเจ้าหน้าที่" aria-label="ชื่อเจ้าหน้าที่" /><select id="staffRole" aria-label="ตำแหน่งเจ้าหน้าที่"><option value="HN">HN</option><option value="Incharge">Incharge</option><option value="RN">RN</option><option value="PN">PN</option><option value="HP">HP</option></select><button type="submit" id="staffSubmitButton" class="primary-button compact">+ เพิ่มเจ้าหน้าที่</button><button type="button" id="cancelStaffEdit" class="secondary-button compact" hidden>ยกเลิก</button></form><div id="staffList" class="staff-list"></div></section>
           <section class="data-card" id="allocation">
             <div class="card-header">
               <div>

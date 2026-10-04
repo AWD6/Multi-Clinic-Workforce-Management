@@ -43,6 +43,8 @@ let selectedWeek = getDefaultWeek(new Date());
 let assignmentDate = dateKey(getDefaultWeek(new Date()));
 let lastCalculated = false;
 let toastTimer;
+let editingStaffId = null;
+let editingStaffScopeKey = null;
 
 function esc(value) { return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])); }
 function clamp(value) { return Math.max(0, Number.isFinite(Number(value)) ? Number(value) : 0); }
@@ -108,7 +110,46 @@ function renderAssignments() { renderAssignmentDays(); const list = assignmentsF
 function updateAssignment(element) { const list = assignmentsForDate(); const person = list[Number(element.dataset.index)]; const field = element.dataset.field; if (field === "status") { person.status = element.value || element.dataset.value; person.statusValue = person.status === "Float ออก" ? FLOAT_OPTIONS[0] : person.status === "ประชุม/อบรม" || person.status === "ใช้ ชม." ? "1" : ""; } else if (field === "statusValue") { person.statusValue = element.value; } else if (field === "statusCustom") { person.statusValue = ["ประชุม/อบรม", "Float ออก", "ใช้ ชม."].includes(person.status) ? formatTime(element.value) : element.value; } else person[field] = element.value; commitAssignments(list); }
 function updateTask(element) { const list = assignmentsForDate(); const person = list[Number(element.dataset.index)]; const task = person.tasks[Number(element.dataset.taskIndex)]; if (element.dataset.field === "task") task.task = element.value; if (element.dataset.field === "customTask") task.task = element.value || "อื่นๆ"; if (element.dataset.field === "time") task.time = formatTime(element.value); commitAssignments(list); }
 function commitAssignments(list) { saveAssignments(list); renderAll(); }
-function renderStaff() { const list = staffForScope(); const container = document.getElementById("staffList"); container.innerHTML = list.length ? list.map((person) => `<div class="staff-item"><div><strong>${esc(person.name)}</strong><span>${esc(person.role)}</span></div><button type="button" data-remove-staff="${person.id}">ลบ</button></div>`).join("") : `<div class="empty-state">ยังไม่มีเจ้าหน้าที่ในพื้นที่นี้</div>`; container.querySelectorAll("[data-remove-staff]").forEach((button) => button.addEventListener("click", () => { const next = staffForScope().filter((person) => person.id !== button.dataset.removeStaff); saveStaff(next); renderAll(); showToast("ลบเจ้าหน้าที่แล้ว"); })); }
+function resetStaffForm() {
+  editingStaffId = null;
+  editingStaffScopeKey = null;
+  const form = document.getElementById("staffForm");
+  if (form) { form.reset(); form.classList.remove("is-editing"); }
+  const submitButton = document.getElementById("staffSubmitButton");
+  if (submitButton) submitButton.textContent = "+ เพิ่มเจ้าหน้าที่";
+  const cancelButton = document.getElementById("cancelStaffEdit");
+  if (cancelButton) cancelButton.hidden = true;
+}
+function startStaffEdit(staffId) {
+  const person = staffForScope().find((item) => item.id === staffId);
+  if (!person) return;
+  editingStaffId = person.id;
+  editingStaffScopeKey = scopeKey();
+  document.getElementById("staffName").value = person.name;
+  document.getElementById("staffRole").value = person.role;
+  document.getElementById("staffSubmitButton").textContent = "บันทึกการแก้ไข";
+  document.getElementById("cancelStaffEdit").hidden = false;
+  document.getElementById("staffForm").classList.add("is-editing");
+  document.getElementById("staffForm").scrollIntoView({ behavior: "smooth", block: "center" });
+  document.getElementById("staffName").focus({ preventScroll: true });
+  showToast(`กำลังแก้ไข ${person.name}`);
+}
+function renderStaff() {
+  if (editingStaffId && editingStaffScopeKey !== scopeKey()) resetStaffForm();
+  const list = staffForScope();
+  const container = document.getElementById("staffList");
+  const cancelButton = document.getElementById("cancelStaffEdit");
+  if (cancelButton) cancelButton.onclick = resetStaffForm;
+  container.innerHTML = list.length ? list.map((person) => `<div class="staff-item"><div class="staff-item-person"><strong>${esc(person.name)}</strong><span>${esc(person.role)}</span></div><div class="staff-item-actions"><button type="button" class="staff-edit-button" data-edit-staff="${esc(person.id)}" aria-label="แก้ไข ${esc(person.name)}">แก้ไข</button><button type="button" class="staff-delete-button" data-remove-staff="${esc(person.id)}" aria-label="ลบ ${esc(person.name)}">ลบ</button></div></div>`).join("") : `<div class="empty-state">ยังไม่มีเจ้าหน้าที่ในพื้นที่นี้</div>`;
+  container.querySelectorAll("[data-edit-staff]").forEach((button) => button.addEventListener("click", () => startStaffEdit(button.dataset.editStaff)));
+  container.querySelectorAll("[data-remove-staff]").forEach((button) => button.addEventListener("click", () => {
+    if (editingStaffId === button.dataset.removeStaff) resetStaffForm();
+    const next = staffForScope().filter((person) => person.id !== button.dataset.removeStaff);
+    saveStaff(next);
+    renderAll();
+    showToast("ลบเจ้าหน้าที่แล้ว");
+  }));
+}
 function renderMetrics() { const plans = plansForScope(); const list = assignmentsForDate(); const active = plans.filter((plan) => !plan.holiday); const products = lastCalculated ? active.map((plan) => product(plan, assignmentsForDate(plan.date))).filter((value) => value !== null) : []; const average = products.length ? Math.round(products.reduce((sum, value) => sum + value, 0) / products.length) : null; document.getElementById("totalDemand").textContent = active.reduce((sum, plan) => sum + clamp(plan.forecast), 0).toLocaleString("th-TH"); document.getElementById("demandDetail").textContent = `${active.length} วันทำการ · ${currentUnit().name}`; document.getElementById("totalStaff").textContent = list.length; document.getElementById("staffDetail").textContent = `${selectedClinic} · RN/HN/Incharge/PN/HP`; document.getElementById("plannedDays").textContent = `${active.length} / 5`; document.getElementById("holidayDetail").textContent = `${plans.length - active.length} วันหยุด`; document.getElementById("averageProduct").textContent = productDisplay(average); if (average === null) { document.getElementById("averageDetail").textContent = "กดคำนวณเพื่อดูภาพรวม"; } else { const healthyDays = products.filter((value) => value >= 85 && value <= 115).length; const highDays = products.filter((value) => value > 115).length; const lowDays = products.filter((value) => value < 85).length; const highLabels = active.filter((plan) => { const value = product(plan, assignmentsForDate(plan.date)); return value !== null && value > 115; }).map((plan) => plan.label).join(", "); const lowLabels = active.filter((plan) => { const value = product(plan, assignmentsForDate(plan.date)); return value !== null && value < 85; }).map((plan) => plan.label).join(", "); const healthyLabels = active.filter((plan) => { const value = product(plan, assignmentsForDate(plan.date)); return value !== null && value >= 85 && value <= 115; }).map((plan) => plan.label).join(", "); document.getElementById("averageDetail").textContent = `เฉลี่ยสัปดาห์ ${average}% · พอดี: ${healthyLabels || "ไม่มี"} · ต้องจัดสรรเพิ่ม (>115%): ${highLabels || "ไม่มี"} · พิจารณาปรับ/โยก (<85%): ${lowLabels || "ไม่มี"}`; } }
 function renderAllUnitsSummary() {
   const allAssignments = store.read(STORAGE.assignments, {});
@@ -157,7 +198,41 @@ function allocationRoleCell(list, role) { const value = roleAllocation(list, rol
 function aggregateRoleStats(daily) { return ["nurse", "pn", "hp"].reduce((result, role) => { result[role] = daily.reduce((sum, day) => { const value = roleAllocation(day.list, role); Object.keys(sum).forEach((field) => { sum[field] += value[field] || 0; }); return sum; }, { people: 0, leave: 0, training: 0, float: 0, useHours: 0, removedHours: 0 }); return result; }, {}); }
 function renderAllocation() { const list = assignmentsForDate(); const allocation = allocationFor(list); const rows = plansForScope().map((plan) => { const dayList = assignmentsForDate(plan.date); return `<div class="table-row staffing-row staffing-columns ${plan.holiday ? "is-holiday" : ""}"><div class="allocation-day"><b>${esc(plan.label)}</b><small>${toThaiDate(new Date(`${plan.date}T00:00:00`))}</small></div>${allocationRoleCell(dayList, "nurse")}${allocationRoleCell(dayList, "pn")}${allocationRoleCell(dayList, "hp")}</div>`; }).join(""); document.getElementById("staffingRows").innerHTML = rows; document.getElementById("allocationSummary").innerHTML = `<div class="allocation-kpi"><b>${allocation.people}</b><span>คนที่จ่ายงาน</span></div><div class="allocation-kpi"><b>${allocation.leave}</b><span>คนลา</span></div><div class="allocation-kpi"><b>${allocation.training}</b><span>ชม. ประชุม/อบรม</span></div><div class="allocation-kpi"><b>${allocation.float}</b><span>ชม. Float ออก</span></div><div class="allocation-kpi"><b>${allocation.useHours}</b><span>ชม. ใช้ ชม.</span></div><div class="allocation-kpi emphasis"><b>${allocation.removedHours}</b><span>ชม. หักจาก Product</span></div>`; }
 function renderAll() { renderSelectors(); document.getElementById("weekLabel").textContent = weekLabel(selectedWeek); document.getElementById("weekInput")?.setAttribute("value", toWeekValue(selectedWeek)); renderPlanning(); renderAssignments(); renderStaff(); renderAllocation(); renderMetrics(); renderAllUnitsSummary(); }
-function addStaff(event) { event.preventDefault(); const name = document.getElementById("staffName").value.trim(); const role = document.getElementById("staffRole").value; if (!name) return; const list = staffForScope(); list.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name, role, tasks: defaultTasks(role) }); saveStaff(list); event.target.reset(); renderAll(); showToast(`เพิ่ม ${name} แล้ว`); }
+function addStaff(event) {
+  event.preventDefault();
+  const name = document.getElementById("staffName").value.trim();
+  const role = document.getElementById("staffRole").value;
+  if (!name) return;
+  const list = staffForScope();
+  if (editingStaffId) {
+    if (editingStaffScopeKey !== scopeKey()) {
+      resetStaffForm();
+      renderAll();
+      showToast("พื้นที่เปลี่ยนแล้ว กรุณาเลือกเจ้าหน้าที่ใหม่");
+      return;
+    }
+    const index = list.findIndex((person) => person.id === editingStaffId);
+    if (index < 0) {
+      resetStaffForm();
+      renderAll();
+      showToast("ไม่พบเจ้าหน้าที่ กรุณาลองใหม่");
+      return;
+    }
+    const previous = list[index];
+    list[index] = { ...previous, name, role };
+    if (previous.role !== role) list[index].tasks = defaultTasks(role);
+    saveStaff(list);
+    resetStaffForm();
+    renderAll();
+    showToast(`แก้ไขข้อมูล ${name} แล้ว`);
+    return;
+  }
+  list.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name, role, tasks: defaultTasks(role) });
+  saveStaff(list);
+  resetStaffForm();
+  renderAll();
+  showToast(`เพิ่ม ${name} แล้ว`);
+}
 function resetWeek() { const all = store.read(STORAGE.plans, {}); delete all[`${scopeKey()}::${weekKey()}`]; store.write(STORAGE.plans, all); Object.keys(store.read(STORAGE.assignments, {})).filter((key) => key.startsWith(`${scopeKey()}::`)).forEach(() => {}); lastCalculated = false; renderAll(); showToast("รีเซ็ตแผนสัปดาห์นี้แล้ว"); }
 function resetAll() { if (!window.confirm("ต้องการล้างข้อมูล local ทั้งหมดหรือไม่?")) return; Object.values(STORAGE).forEach((key) => store.remove(key)); location.reload(); }
 function showToast(message) { const toast = document.getElementById("toast"); toast.textContent = message; toast.classList.add("is-visible"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 2600); }
