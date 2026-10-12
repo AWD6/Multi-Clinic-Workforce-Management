@@ -6,6 +6,8 @@
   let activeScope = "";
   let allowedScopes = [];
   let bridgeFrame = null;
+  let bridgeWindow = null;
+  let bridgeOrigin = "";
   let bridgeReady = false;
   let bootstrapReceived = false;
   let resolveReady;
@@ -39,7 +41,7 @@
     window.dispatchEvent(new CustomEvent("opd2-sync-error", { detail: { message } }));
   }
   function sendBridgeCall(action, payload) {
-    if (!bridgeReady || !bridgeFrame?.contentWindow) return Promise.reject(new Error("ยังเชื่อมต่อฐานข้อมูลไม่สำเร็จ"));
+    if (!bridgeReady || !bridgeWindow) return Promise.reject(new Error("ยังเชื่อมต่อฐานข้อมูลไม่สำเร็จ"));
     const id = `opd2-${Date.now()}-${++callSequence}`;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -47,7 +49,7 @@
         reject(new Error("หมดเวลารอการตอบกลับจาก Google Sheet"));
       }, 20000);
       pendingCalls.set(id, { resolve, reject, timer });
-      bridgeFrame.contentWindow.postMessage({ type: "OPD2_CALL", id, action, payload }, "*");
+      bridgeWindow.postMessage({ type: "OPD2_CALL", id, action, payload }, bridgeOrigin);
     });
   }
   function mergeBootstrap(result) {
@@ -84,21 +86,31 @@
       bridgeFrame.title = "การเชื่อมต่อฐานข้อมูลกลาง";
       bridgeFrame.setAttribute("aria-hidden", "true");
       bridgeFrame.style.cssText = "position:fixed;width:1px;height:1px;left:-10px;bottom:0;border:0;opacity:0;pointer-events:none";
-      bridgeFrame.src = bridgeUrl.toString();
-      document.body.appendChild(bridgeFrame);
+      const isTrustedBridgeOrigin = (origin) => {
+        try {
+          const host = new URL(origin).hostname;
+          return host === "script.google.com" || host === "script.googleusercontent.com" || /^[a-z0-9-]+-script\.googleusercontent\.com$/i.test(host);
+        } catch { return false; }
+      };
       window.addEventListener("message", (event) => {
-        if (!bridgeFrame || event.source !== bridgeFrame.contentWindow) return;
+        if (!bridgeFrame || !isTrustedBridgeOrigin(event.origin)) return;
         const message = event.data || {};
         if (message.type === "OPD2_BRIDGE_READY") {
+          if (!event.source || event.source === window) return;
+          bridgeWindow = event.source;
+          bridgeOrigin = event.origin;
           bridgeReady = true;
-          bridgeFrame.contentWindow.postMessage({ type: "OPD2_INIT" }, "*");
-        } else if (message.type === "OPD2_BOOTSTRAP") {
+          bridgeWindow.postMessage({ type: "OPD2_INIT" }, bridgeOrigin);
+          return;
+        }
+        if (event.source !== bridgeWindow) return;
+        if (message.type === "OPD2_BOOTSTRAP") {
           bootstrapReceived = true;
           if (message.ok) {
             try { mergeBootstrap(message.data); }
             catch (error) { setStatus("โหลดข้อมูลไม่สำเร็จ", "error"); rejectReady(error); }
           } else {
-            const error = new Error(message.message || "ตรวจสอบสิทธิ์ Google Workspace ไม่สำเร็จ");
+            const error = new Error(message.message || "Apps Script อ่านข้อมูลไม่สำเร็จ");
             setStatus("เชื่อมต่อไม่ได้ · " + error.message, "error");
             rejectReady(error);
           }
@@ -111,6 +123,8 @@
           else pending.reject(new Error(message.message || "บันทึกข้อมูลไม่สำเร็จ"));
         }
       });
+      bridgeFrame.src = bridgeUrl.toString();
+      document.body.appendChild(bridgeFrame);
       setTimeout(() => {
         if (!bootstrapReceived) {
           const error = new Error(bridgeReady ? "Apps Script ไม่ตอบกลับข้อมูล · ตรวจสิทธิ์และ Apps Script Executions" : "ไม่พบหน้าเชื่อมต่อ Apps Script · ตรวจ URL / Deploy / การเข้าสู่ระบบ Google");
