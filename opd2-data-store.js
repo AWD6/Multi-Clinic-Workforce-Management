@@ -2,6 +2,7 @@
   const PREFIX = "opd2-local-v4:";
   const listeners = new Set();
   const pendingCalls = new Map();
+  const pendingCloudWrites = new Map();
   let callSequence = 0;
   let activeScope = "";
   let allowedScopes = [];
@@ -52,21 +53,71 @@
       bridgeWindow.postMessage({ type: "OPD2_CALL", id, action, payload }, bridgeOrigin);
     });
   }
+  function cloneValue(value) {
+    if (value === undefined) return undefined;
+    try { return JSON.parse(JSON.stringify(value)); } catch { return value; }
+  }
+  function mergeStaffChanges(remoteList, beforeList, currentList) {
+    const merged = new Map();
+    (Array.isArray(remoteList) ? remoteList : []).forEach((person) => {
+      if (person && person.id !== undefined) merged.set(String(person.id), person);
+    });
+    const before = new Map((Array.isArray(beforeList) ? beforeList : []).filter((person) => person && person.id !== undefined).map((person) => [String(person.id), person]));
+    const current = new Map((Array.isArray(currentList) ? currentList : []).filter((person) => person && person.id !== undefined).map((person) => [String(person.id), person]));
+    before.forEach((person, id) => { if (!current.has(id)) merged.delete(id); });
+    current.forEach((person, id) => {
+      if (!before.has(id) || JSON.stringify(before.get(id)) !== JSON.stringify(person)) merged.set(id, person);
+    });
+    return Array.from(merged.values());
+  }
+  function mergeDefaultChanges(remoteValue, beforeValue, currentValue) {
+    const merged = { ...(remoteValue && typeof remoteValue === "object" ? remoteValue : {}) };
+    const before = beforeValue && typeof beforeValue === "object" ? beforeValue : {};
+    const current = currentValue && typeof currentValue === "object" ? currentValue : {};
+    new Set([...Object.keys(before), ...Object.keys(current)]).forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(current, key)) delete merged[key];
+      else if (!Object.prototype.hasOwnProperty.call(before, key) || JSON.stringify(before[key]) !== JSON.stringify(current[key])) merged[key] = current[key];
+    });
+    return merged;
+  }
   function mergeBootstrap(result) {
     if (!result || !Array.isArray(result.scopes) || !result.rooms) throw new Error("รูปแบบข้อมูลตอบกลับไม่ถูกต้อง");
     allowedScopes = result.scopes;
     window.__OPD2_ALLOWED_SCOPES__ = allowedScopes.slice();
-    const staff = rawRead("staff-directory", {} ) || {};
-    const defaults = rawRead("assignment-defaults", {} ) || {};
+    const staff = rawRead("staff-directory", {}) || {};
+    const defaults = rawRead("assignment-defaults", {}) || {};
+    const uploads = [];
     allowedScopes.forEach((scope) => {
       const room = result.rooms[scope] || {};
-      staff[scope] = Array.isArray(room.staff) ? room.staff : [];
-      defaults[scope] = room.defaults && typeof room.defaults === "object" ? room.defaults : {};
+      const remoteStaff = Array.isArray(room.staff) ? room.staff : [];
+      const localStaff = Array.isArray(staff[scope]) ? staff[scope] : [];
+      const pendingStaff = pendingCloudWrites.get(`staff-directory::${scope}`);
+      if (!remoteStaff.length) staff[scope] = pendingStaff ? pendingStaff.value : localStaff;
+      else if (pendingStaff) staff[scope] = mergeStaffChanges(remoteStaff, pendingStaff.before, pendingStaff.value);
+      else staff[scope] = remoteStaff;
+      if (JSON.stringify(staff[scope]) !== JSON.stringify(remoteStaff)) uploads.push({ scope, collection: "staff-directory", value: cloneValue(staff[scope]) });
+
+      const remoteDefaults = room.defaults && typeof room.defaults === "object" && !Array.isArray(room.defaults) ? room.defaults : {};
+      const localDefaults = defaults[scope] && typeof defaults[scope] === "object" ? defaults[scope] : {};
+      const pendingDefaults = pendingCloudWrites.get(`assignment-defaults::${scope}`);
+      if (!Object.keys(remoteDefaults).length) defaults[scope] = pendingDefaults ? pendingDefaults.value : localDefaults;
+      else if (pendingDefaults) defaults[scope] = mergeDefaultChanges(remoteDefaults, pendingDefaults.before, pendingDefaults.value);
+      else defaults[scope] = remoteDefaults;
+      if (JSON.stringify(defaults[scope]) !== JSON.stringify(remoteDefaults)) uploads.push({ scope, collection: "assignment-defaults", value: cloneValue(defaults[scope]) });
     });
     rawWrite("staff-directory", staff);
     rawWrite("assignment-defaults", defaults);
+    pendingCloudWrites.clear();
     setStatus("เชื่อม Google Sheet แล้ว · โหลดรายชื่อและค่าเริ่มต้นเรียบร้อย", "ready");
     resolveReady(true);
+    window.dispatchEvent(new CustomEvent("opd2-cloud-ready", { detail: { scopes: allowedScopes.slice() } }));
+    if (uploads.length) {
+      setStatus("เชื่อมต่อแล้ว · กำลังนำข้อมูลเดิมจากเบราว์เซอร์ขึ้นชีต…", "saving");
+      (async () => {
+        for (const item of uploads) await sendBridgeCall("saveRoomCollection", item);
+        setStatus("เชื่อม Google Sheet แล้ว · เก็บข้อมูลเดิมเรียบร้อย", "ready");
+      })().catch((error) => signalError(error.message));
+    }
   }
   function startBridge() {
     if (!cloudEnabled) {
@@ -145,14 +196,30 @@
     return null;
   }
   function write(key, value) {
+    const writeScope = activeScope;
+    const previousValue = cloudEnabled && ["staff-directory", "assignment-defaults"].includes(key) && writeScope
+      ? (rawRead(key, {}) || {})[writeScope]
+      : undefined;
     rawWrite(key, value);
     listeners.forEach((listener) => listener(key, value));
     if (cloudEnabled && ["staff-directory", "assignment-defaults"].includes(key) && activeScope) {
       const scopedValue = scopeValue(key, value);
-      setStatus("กำลังบันทึกข้อมูลห้องนี้ลง Google Sheet…", "saving");
-      sendBridgeCall("saveRoomCollection", { scope: activeScope, collection: key, value: scopedValue })
-        .then(() => setStatus("บันทึกใน Google Sheet แล้ว", "ready"))
-        .catch((error) => signalError(error.message));
+      if (!bootstrapReceived) {
+        const queueKey = `${key}::${writeScope}`;
+        const existing = pendingCloudWrites.get(queueKey);
+        pendingCloudWrites.set(queueKey, {
+          scope: writeScope,
+          collection: key,
+          before: existing ? existing.before : cloneValue(previousValue),
+          value: cloneValue(scopedValue)
+        });
+        if (window.__OPD2_SYNC_STATUS__ !== "error") setStatus("กำลังเชื่อมต่อ Google Sheet… · เก็บการเปลี่ยนแปลงไว้ก่อน", "loading");
+      } else {
+        setStatus("กำลังบันทึกข้อมูลห้องนี้ลง Google Sheet…", "saving");
+        sendBridgeCall("saveRoomCollection", { scope: writeScope, collection: key, value: scopedValue })
+          .then(() => setStatus("บันทึกใน Google Sheet แล้ว", "ready"))
+          .catch((error) => signalError(error.message));
+      }
     }
     return true;
   }

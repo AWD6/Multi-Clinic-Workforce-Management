@@ -5,9 +5,13 @@ const ALL_UNITS = [
   { id: "u7", name: "หน่วยตรวจที่ 7", clinics: ["EID Complex"] },
   { id: "chemo", name: "หน่วยให้ยาเคมีบำบัดผู้ป่วยนอก", clinics: ["ห้องให้ยาเคมีบำบัด", "OPD 24", "OPD 110", "EKG", "ศูนย์สุขใจ"] }
 ];
-const ACCESSIBLE_SCOPES = store.getAllowedScopes();
-const UNITS = store.isCloud() ? ALL_UNITS.map((unit) => ({ ...unit, clinics: unit.clinics.filter((clinic) => ACCESSIBLE_SCOPES.includes(`${unit.id}::${clinic}`)) })).filter((unit) => unit.clinics.length) : ALL_UNITS;
-if (!UNITS.length) { const status = document.getElementById("storageStatus"); if (status) status.textContent = "ไม่มีห้องตรวจที่ตรงกับสิทธิ์ใน Google Sheet · ตรวจ Unit ID และชื่อห้องในแท็บ Users"; throw new Error("No authorized clinic matches the configured app scopes"); }
+function unitsFromStore() {
+  const scopes = store.getAllowedScopes();
+  if (!store.isCloud() || !scopes.length) return ALL_UNITS;
+  const filtered = ALL_UNITS.map((unit) => ({ ...unit, clinics: unit.clinics.filter((clinic) => scopes.includes(`${unit.id}::${clinic}`)) })).filter((unit) => unit.clinics.length);
+  return filtered.length ? filtered : ALL_UNITS;
+}
+let UNITS = unitsFromStore();
 const DAYS = ["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์"];
 const DAY_SHORT = ["จ", "อ", "พ", "พฤ", "ศ"];
 const ROLES = ["RN", "HN", "Incharge", "PN", "HP"];
@@ -249,6 +253,12 @@ async function generateWeeklyPdf() { const PdfConstructor = window.jspdf?.jsPDF;
 function bindEvents() { document.querySelectorAll("[data-scroll]").forEach((button) => button.addEventListener("click", () => { document.getElementById(button.dataset.scroll)?.scrollIntoView({ behavior: "smooth" }); document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("is-active", item === button)); })); document.getElementById("unitSelect").addEventListener("change", (event) => { selectedUnitId = event.target.value; selectedClinic = currentUnit().clinics[0]; store.write(STORAGE.selection, { unitId: selectedUnitId, clinic: selectedClinic }); renderAll(); }); document.getElementById("clinicSelect").addEventListener("change", (event) => { selectedClinic = event.target.value; store.write(STORAGE.selection, { unitId: selectedUnitId, clinic: selectedClinic }); renderAll(); }); document.getElementById("staffForm").addEventListener("submit", addStaff); document.getElementById("dailyForecast").addEventListener("change", (event) => { const plans = plansForScope(); const plan = plans.find((item) => item.date === assignmentDate); if (plan) { plan.scheduled = clamp(event.target.value); plan.walkIn = 0; plan.outside = 0; plan.forecast = plan.scheduled; savePlans(plans); renderAll(); } }); document.getElementById("applyDefaultAssignments").addEventListener("click", () => { const list = assignmentsForDate().map((person) => ({ ...person, ...(defaultsForScope()[person.id] || {}) })); saveAssignments(list); renderAll(); showToast("ใช้ Default แล้ว"); }); document.getElementById("calculateButton").addEventListener("click", calculate); document.getElementById("resetWeek").addEventListener("click", resetWeek); document.getElementById("resetAll").addEventListener("click", resetAll); document.getElementById("generatePdfButton").addEventListener("click", generateWeeklyPdf); document.getElementById("weekButton").addEventListener("click", () => { const picker = document.getElementById("weekPicker"); picker.hidden = !picker.hidden; }); document.getElementById("weekInput").addEventListener("change", (event) => { selectedWeek = mondayFromWeekValue(event.target.value); assignmentDate = dateKey(selectedWeek); lastCalculated = false; renderAll(); document.getElementById("weekPicker").hidden = true; }); document.getElementById("previousWeek").addEventListener("click", () => { selectedWeek = addDays(selectedWeek, -7); assignmentDate = dateKey(selectedWeek); lastCalculated = false; renderAll(); }); document.getElementById("nextWeek").addEventListener("click", () => { selectedWeek = addDays(selectedWeek, 7); assignmentDate = dateKey(selectedWeek); lastCalculated = false; renderAll(); }); window.addEventListener("storage", (event) => { if (event.key?.startsWith("opd2-local-v4:")) renderAll(); }); }
 function updateClock() { document.getElementById("liveClock").textContent = new Intl.DateTimeFormat("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()); }
 bindEvents(); updateClock(); setInterval(updateClock, 30000); renderAll();
+window.addEventListener("opd2-cloud-ready", () => {
+  UNITS = unitsFromStore();
+  if (!UNITS.some((unit) => unit.id === selectedUnitId)) selectedUnitId = UNITS[0].id;
+  if (!currentUnit().clinics.includes(selectedClinic)) selectedClinic = currentUnit().clinics[0];
+  renderAll();
+});
 window.addEventListener("opd2-sync-error", (event) => showToast(`ซิงก์ Google Sheet ไม่สำเร็จ: ${event.detail?.message || "โปรดลองใหม่"}`));
 
 function renderOriginalRecords() {

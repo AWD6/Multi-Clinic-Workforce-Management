@@ -251,13 +251,23 @@
     <script src="opd2-config.js"></script>
     <script src="opd2-data-store.js"></script>
     <script>
-      window.__OPD2_DATA_READY__.then(() => {
-        const app = document.createElement("script");
-        app.src = "script.js";
-        document.body.appendChild(app);
-      }).catch((error) => {
+      const app = document.createElement("script");
+      app.src = "script.js";
+      app.onerror = () => {
         const status = document.getElementById("storageStatus");
-        if (status) status.textContent = `เริ่มระบบไม่ได้: ${error.message} · ติดต่อผู้ดูแลระบบ`;
+        if (status) {
+          status.textContent = "โหลดส่วนระบบไม่สำเร็จ · ลองรีเฟรชหน้าเว็บหรือติดต่อผู้ดูแลระบบ";
+          status.dataset.state = "error";
+        }
+      };
+      document.body.appendChild(app);
+      window.__OPD2_DATA_READY__.catch((error) => {
+        const status = document.getElementById("storageStatus");
+        if (status) {
+          status.textContent = `เชื่อม Google Sheet ไม่สำเร็จ · ${error.message} · ระบบยังใช้ข้อมูลในเบราว์เซอร์นี้ได้ แต่ยังไม่ซิงก์`;
+          status.dataset.state = "error";
+        }
+        window.dispatchEvent(new CustomEvent("opd2-cloud-error", { detail: { message: error.message } }));
         console.error("[OPD2] โหลดข้อมูลเริ่มต้นไม่สำเร็จ", error);
       });
     </script>
