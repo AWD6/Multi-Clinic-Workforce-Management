@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <base target="_top" />
+    <meta charset="utf-8" />
+    <script>
+      const ALLOWED_PARENT_ORIGIN = <?!= JSON.stringify(allowedParentOrigin) ?>;
+      function reply(message) {
+        if (window.top && window.top !== window) {
+          window.top.postMessage(message, ALLOWED_PARENT_ORIGIN);
+        }
+      }
+      function failed(id, error) {
+        reply({ type: id ? "OPD2_RESULT" : "OPD2_BOOTSTRAP", id: id || undefined, ok: false, message: error && error.message ? error.message : String(error) });
+      }
+      window.addEventListener("message", (event) => {
+        if (event.origin !== ALLOWED_PARENT_ORIGIN || event.source !== window.top) return;
+        const message = event.data || {};
+        if (message.type === "OPD2_INIT") {
+          google.script.run
+            .withSuccessHandler((data) => reply({ type: "OPD2_BOOTSTRAP", ok: true, data }))
+            .withFailureHandler((error) => failed(null, error))
+            .getBootstrapData();
+        }
+        if (message.type === "OPD2_CALL" && message.action === "saveRoomCollection") {
+          const payload = message.payload || {};
+          google.script.run
+            .withSuccessHandler((data) => reply({ type: "OPD2_RESULT", id: message.id, ok: true, data }))
+            .withFailureHandler((error) => failed(message.id, error))
+            .saveRoomCollection(payload.scope, payload.collection, payload.value);
+        }
+      });
+      window.addEventListener("load", () => reply({ type: "OPD2_BRIDGE_READY" }));
+    </script>
+  </head>
+  <body>Workforce data bridge</body>
+</html>

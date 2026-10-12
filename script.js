@@ -1,9 +1,13 @@
-const UNITS = [
+const store = window.__OPD2_STORE__;
+const ALL_UNITS = [
   { id: "u4", name: "หน่วยตรวจที่ 4", clinics: ["OPD 9", "OPD 21", "PCU", "OPD เฉพาะทางนอกเวลา"] },
   { id: "u5", name: "หน่วยตรวจที่ 5", clinics: ["OPD 22", "OPD 23", "OPD 26"] },
   { id: "u7", name: "หน่วยตรวจที่ 7", clinics: ["EID Complex"] },
   { id: "chemo", name: "หน่วยให้ยาเคมีบำบัดผู้ป่วยนอก", clinics: ["ห้องให้ยาเคมีบำบัด", "OPD 24", "OPD 110", "EKG", "ศูนย์สุขใจ"] }
 ];
+const ACCESSIBLE_SCOPES = store.getAllowedScopes();
+const UNITS = store.isCloud() ? ALL_UNITS.map((unit) => ({ ...unit, clinics: unit.clinics.filter((clinic) => ACCESSIBLE_SCOPES.includes(`${unit.id}::${clinic}`)) })).filter((unit) => unit.clinics.length) : ALL_UNITS;
+if (!UNITS.length) { const status = document.getElementById("storageStatus"); if (status) status.textContent = "ไม่มีห้องตรวจที่ตรงกับสิทธิ์ใน Google Sheet · ตรวจ Unit ID และชื่อห้องในแท็บ Users"; throw new Error("No authorized clinic matches the configured app scopes"); }
 const DAYS = ["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์"];
 const DAY_SHORT = ["จ", "อ", "พ", "พฤ", "ศ"];
 const ROLES = ["RN", "HN", "Incharge", "PN", "HP"];
@@ -22,7 +26,6 @@ const CPR_CODE_OPTIONS = ["A ตามแพทย์/ประสานงา�
 const FLOAT_OPTIONS = ["08.00-09.00", "09.00-10.00", "10.00-11.00", "11.00-12.00", "13.00-14.00", "14.00-15.00", "15.00-16.00", "กรอกเอง"];
 const HOUR_OPTIONS = ["08.00-09.00", "09.00-10.00", "10.00-11.00", "11.00-12.00", "13.00-14.00", "14.00-15.00", "15.00-16.00", "กรอกเอง"];
 const STORAGE = { selection: "selection", staff: "staff-directory", plans: "clinic-plans", assignments: "clinic-assignments", defaults: "assignment-defaults" };
-const store = window.__OPD2_STORE__;
 function migrateOpd110Label() {
   [STORAGE.selection, STORAGE.staff, STORAGE.plans, STORAGE.assignments, STORAGE.defaults].forEach((storageKey) => {
     const data = store.read(storageKey, null);
@@ -38,7 +41,9 @@ function migrateOpd110Label() {
 }
 migrateOpd110Label();
 let selectedUnitId = store.read(STORAGE.selection, {}).unitId || UNITS[0].id;
+if (!UNITS.some((unit) => unit.id === selectedUnitId)) selectedUnitId = UNITS[0].id;
 let selectedClinic = store.read(STORAGE.selection, {}).clinic || UNITS[0].clinics[0];
+if (!currentUnit().clinics.includes(selectedClinic)) selectedClinic = currentUnit().clinics[0];
 let selectedWeek = getDefaultWeek(new Date());
 let assignmentDate = dateKey(getDefaultWeek(new Date()));
 let lastCalculated = false;
@@ -49,7 +54,7 @@ let editingStaffScopeKey = null;
 function esc(value) { return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])); }
 function clamp(value) { return Math.max(0, Number.isFinite(Number(value)) ? Number(value) : 0); }
 function currentUnit() { return UNITS.find((unit) => unit.id === selectedUnitId) || UNITS[0]; }
-function scopeKey() { return `${selectedUnitId}::${selectedClinic}`; }
+function scopeKey() { const key = `${selectedUnitId}::${selectedClinic}`; store.setScope(key); return key; }
 function dateKey(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
 function addDays(date, amount) { const next = new Date(date); next.setDate(next.getDate() + amount); return next; }
 function getMonday(date) { const next = new Date(date); next.setHours(0, 0, 0, 0); const day = next.getDay(); next.setDate(next.getDate() - (day === 0 ? 6 : day - 1)); return next; }
@@ -81,7 +86,7 @@ function assignmentsForDate(date = assignmentDate) {
   if (!all[key] && staff.length) { all[key] = Object.fromEntries(result.map((person) => [person.id, person])); store.write(STORAGE.assignments, all); }
   return result;
 }
-function saveAssignments(list, date = assignmentDate) { const all = store.read(STORAGE.assignments, {}); all[`${scopeKey()}::${date}`] = Object.fromEntries(list.map((person) => [person.id, person])); store.write(STORAGE.assignments, all); const defaults = defaultsForScope(); list.forEach((person) => { defaults[person.id] = { ...person }; }); saveDefaults(defaults); }
+function saveAssignments(list, date = assignmentDate) { const all = store.read(STORAGE.assignments, {}); all[`${scopeKey()}::${date}`] = Object.fromEntries(list.map((person) => [person.id, person])); store.write(STORAGE.assignments, all); const defaults = defaultsForScope(); list.forEach((person) => { defaults[person.id] = { tasks: person.tasks, break: person.break, location: person.location, fireCodes: person.fireCodes, cprCodes: person.cprCodes }; }); saveDefaults(defaults); }
 function normalizeAssignment(person, source) { const next = { id: source.id, name: source.name, role: source.role, status: person.status || "ปฏิบัติงาน", statusValue: person.statusValue || "", break: person.break || "12.00", location: person.location || "-", fireCodes: normalizeCodeValues(person.fireCodes || person.fire, FIRE_CODE_OPTIONS), cprCodes: normalizeCodeValues(person.cprCodes || person.cpr, CPR_CODE_OPTIONS), arrival: person.arrival || "", note: person.note || "", tasks: (person.tasks?.length ? person.tasks : defaultTasks(source.role)).map((task) => ({ task: task.task || "อื่นๆ", time: formatTime(task.time) })) }; if (next.status === "ใช้ ชม." || next.status === "VAC = ลา") next.break = "12.00"; return next; }
 function formatTime(value) { const text = String(value || "").trim(); if (!text) return ""; const match = text.replace(/[–—]/g, "-").match(/^(\d{1,2}(?:[.:]\d{1,2})?)\s*-\s*(\d{1,2}(?:[.:]\d{1,2})?)/); if (!match) return text; const normalize = (token) => { const [hour, minute = "00"] = token.replace(":", ".").split("."); return `${String(Number(hour)).padStart(2, "0")}.${String(Number(minute)).padStart(2, "0")}`; }; return `${normalize(match[1])}-${normalize(match[2])} น.`; }
 function hoursFromRange(value) { const match = String(value || "").match(/(\d{1,2})[.:](\d{2})\s*[-–]\s*(\d{1,2})[.:](\d{2})/); if (!match) return 0; let start = Number(match[1]) * 60 + Number(match[2]); let end = Number(match[3]) * 60 + Number(match[4]); if (end < start) end += 1440; return Math.max(0, (end - start) / 60); }
@@ -234,7 +239,7 @@ function addStaff(event) {
   showToast(`เพิ่ม ${name} แล้ว`);
 }
 function resetWeek() { const all = store.read(STORAGE.plans, {}); delete all[`${scopeKey()}::${weekKey()}`]; store.write(STORAGE.plans, all); Object.keys(store.read(STORAGE.assignments, {})).filter((key) => key.startsWith(`${scopeKey()}::`)).forEach(() => {}); lastCalculated = false; renderAll(); showToast("รีเซ็ตแผนสัปดาห์นี้แล้ว"); }
-function resetAll() { if (!window.confirm("ต้องการล้างข้อมูล local ทั้งหมดหรือไม่?")) return; Object.values(STORAGE).forEach((key) => store.remove(key)); location.reload(); }
+function resetAll() { const message = store.isCloud() ? "ล้างข้อมูลชั่วคราวในเบราว์เซอร์นี้หรือไม่? ข้อมูลรายชื่อใน Google Sheet จะไม่ถูกลบ" : "ต้องการล้างข้อมูล local ทั้งหมดหรือไม่?"; if (!window.confirm(message)) return; Object.values(STORAGE).forEach((key) => store.remove(key)); location.reload(); }
 function showToast(message) { const toast = document.getElementById("toast"); toast.textContent = message; toast.classList.add("is-visible"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 2600); }
 function calculate() { lastCalculated = true; renderAll(); document.getElementById("allocation").scrollIntoView({ behavior: "smooth", block: "start" }); }
 function pdfStatusHtml(person) { const info = activityHours(person); const value = person.status === "Float ออก" || person.status === "ใช้ ชม." ? ` ${formatTime(person.statusValue || "")} (${info.hours} ชม.)` : person.status === "ประชุม/อบรม" ? ` ${info.hours} ชม.` : ""; const className = person.status === "ปฏิบัติงาน" ? "activity-pill-work" : person.status === "VAC = ลา" ? "activity-pill-leave" : person.status === "ประชุม/อบรม" ? "activity-pill-training" : person.status === "Float ออก" ? "activity-pill-float" : "activity-pill-use"; return `<span class="status-pill ${className}">${esc(person.status)}${value}</span>`; }
@@ -244,6 +249,7 @@ async function generateWeeklyPdf() { const PdfConstructor = window.jspdf?.jsPDF;
 function bindEvents() { document.querySelectorAll("[data-scroll]").forEach((button) => button.addEventListener("click", () => { document.getElementById(button.dataset.scroll)?.scrollIntoView({ behavior: "smooth" }); document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("is-active", item === button)); })); document.getElementById("unitSelect").addEventListener("change", (event) => { selectedUnitId = event.target.value; selectedClinic = currentUnit().clinics[0]; store.write(STORAGE.selection, { unitId: selectedUnitId, clinic: selectedClinic }); renderAll(); }); document.getElementById("clinicSelect").addEventListener("change", (event) => { selectedClinic = event.target.value; store.write(STORAGE.selection, { unitId: selectedUnitId, clinic: selectedClinic }); renderAll(); }); document.getElementById("staffForm").addEventListener("submit", addStaff); document.getElementById("dailyForecast").addEventListener("change", (event) => { const plans = plansForScope(); const plan = plans.find((item) => item.date === assignmentDate); if (plan) { plan.scheduled = clamp(event.target.value); plan.walkIn = 0; plan.outside = 0; plan.forecast = plan.scheduled; savePlans(plans); renderAll(); } }); document.getElementById("applyDefaultAssignments").addEventListener("click", () => { const list = assignmentsForDate().map((person) => ({ ...person, ...(defaultsForScope()[person.id] || {}) })); saveAssignments(list); renderAll(); showToast("ใช้ Default แล้ว"); }); document.getElementById("calculateButton").addEventListener("click", calculate); document.getElementById("resetWeek").addEventListener("click", resetWeek); document.getElementById("resetAll").addEventListener("click", resetAll); document.getElementById("generatePdfButton").addEventListener("click", generateWeeklyPdf); document.getElementById("weekButton").addEventListener("click", () => { const picker = document.getElementById("weekPicker"); picker.hidden = !picker.hidden; }); document.getElementById("weekInput").addEventListener("change", (event) => { selectedWeek = mondayFromWeekValue(event.target.value); assignmentDate = dateKey(selectedWeek); lastCalculated = false; renderAll(); document.getElementById("weekPicker").hidden = true; }); document.getElementById("previousWeek").addEventListener("click", () => { selectedWeek = addDays(selectedWeek, -7); assignmentDate = dateKey(selectedWeek); lastCalculated = false; renderAll(); }); document.getElementById("nextWeek").addEventListener("click", () => { selectedWeek = addDays(selectedWeek, 7); assignmentDate = dateKey(selectedWeek); lastCalculated = false; renderAll(); }); window.addEventListener("storage", (event) => { if (event.key?.startsWith("opd2-local-v4:")) renderAll(); }); }
 function updateClock() { document.getElementById("liveClock").textContent = new Intl.DateTimeFormat("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()); }
 bindEvents(); updateClock(); setInterval(updateClock, 30000); renderAll();
+window.addEventListener("opd2-sync-error", (event) => showToast(`ซิงก์ Google Sheet ไม่สำเร็จ: ${event.detail?.message || "โปรดลองใหม่"}`));
 
 function renderOriginalRecords() {
   const records = store.read("weekly-records", []);

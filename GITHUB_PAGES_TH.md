@@ -1,6 +1,6 @@
 # วิธีเผยแพร่บน GitHub Pages
 
-โปรเจกต์รุ่นนี้เป็นเว็บแบบ static และบันทึกข้อมูลใน Local Storage ของเบราว์เซอร์ ไม่ต้องมี Node server หรือ Google Apps Script สำหรับการเผยแพร่หน้าเว็บ
+เว็บหลักยังเป็น static site บน GitHub Pages เช่นเดิม หากต้องการซิงก์รายชื่อบุคลากรข้ามเครื่อง ให้ตั้ง Google Sheet + Apps Script bridge ตาม [คู่มือตั้งค่า Google Sheets ภาษาไทย](./GOOGLE_SHEETS_SETUP_TH.md) แล้ววาง URL `/exec` ใน `opd2-config.js` ก่อน deploy
 
 ## ขั้นตอน
 
@@ -10,11 +10,11 @@
 4. เปิดแท็บ **Actions** เลือก workflow “Deploy OPD 2 Workforce to GitHub Pages” แล้วตรวจให้การรันจบด้วยสถานะสำเร็จ จากนั้นเปิด URL ที่แสดงใน deployment/environment
 5. แชร์คู่มือหน้าเดียวให้ผู้ทดลองใช้ได้ที่ `https://OWNER.github.io/REPOSITORY/USER_GUIDE_TH.html` (แทน `OWNER/REPOSITORY` ด้วยชื่อจริง) หรือเติม `/USER_GUIDE_TH.html` ต่อท้าย URL ของ deployment
 
-> Workflow รุ่นนี้ไม่ต้องตั้งค่า Repository Variables `OPD2_SHEETS_API_URL` หรือ `OPD2_API_BASE` เพราะแอปปัจจุบันใช้ Local Storage เท่านั้น
+> ตัว workflow ไม่ต้องตั้ง Repository Variables สำหรับ URL เพราะแอปอ่าน `window.OPD2_BRIDGE_URL` จาก `opd2-config.js` ซึ่งต้องใส่ URL `/exec` ของ Apps Script ที่ deploy แล้ว
 
 ## ข้อจำกัดของข้อมูล
 
-ข้อมูลจะอยู่เฉพาะใน browser profile และอุปกรณ์ที่บันทึกไว้ ไม่ได้ sync ระหว่างผู้ใช้หรือเครื่องต่าง ๆ การเผยแพร่ผ่าน GitHub Pages เป็นเพียงการโฮสต์ไฟล์หน้าเว็บ ไม่ได้ทำให้ข้อมูลแชร์กัน หากต้องการฐานข้อมูลส่วนกลาง ต้องเพิ่ม backend/API และปรับแอปแยกต่างหาก
+หากเว้น `OPD2_BRIDGE_URL` ว่าง แอปจะเก็บข้อมูลใน browser profile นี้เท่านั้น เมื่อกำหนด URL Apps Script แล้ว รายชื่อบุคลากรและค่า Default จะซิงก์กับ Google Sheet แยกตามห้อง ส่วนแผนผู้ป่วยและตารางจ่ายงานรายวันยังไม่ซิงก์ข้ามเครื่องในรุ่นนี้ รุ่น public-link ตั้งใจให้ทุกคนที่เปิดเว็บอ่านและแก้ทะเบียนทุกห้องได้ แม้ Google Sheet เองยังคงตั้งเป็นส่วนตัว โปรดอ่านคำเตือนในคู่มือตั้งค่าก่อน Deploy
 
 ## ถ้า workflow ไม่เริ่มทำงาน
 

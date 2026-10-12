@@ -1,17 +1,8 @@
-# Multi Clinic Workforce Management · Original UI / Local Edition
+# Multi Clinic Workforce Management
 
-เวอร์ชันนี้ยึด **โครงสร้าง UI, ตาราง, ลำดับข้อมูล และรูปแบบการใช้งานจากไฟล์ต้นฉบับ** เป็นหลัก แล้วปรับเฉพาะรายการที่กำหนด:
+เว็บหลักยังเผยแพร่บน GitHub Pages การซิงก์รายชื่อบุคลากรและค่าเริ่มต้นประจำห้องทำผ่าน Google Sheet + Apps Script bridge รุ่นนี้เป็น **public-link**: ทุกคนที่เปิดเว็บได้สามารถดูและแก้ทะเบียนทุกห้องผ่านแอปได้ แม้ไฟล์ Sheet จะตั้งเป็นส่วนตัว
 
-- ใช้ Local Storage ใน browser เท่านั้น
-- ไม่มี Google Sheets, remote database หรือ realtime backend
-- แยกข้อมูลตามหน่วยตรวจและห้องตรวจด้วย dropdown
-- เพิ่มเจ้าหน้าที่ได้ไม่จำกัด และจำข้อมูลการจ่ายงานเป็น Default
-- รองรับ Float และ ใช้ ชม. แบบช่วงเวลา พร้อมคำนวณชั่วโมง
-- เวลา `8-12` ถูกแปลงเป็น `08.00 - 12.00 น.`
-- Dashboard สรุปแยกตามหน่วยและห้องตรวจ
-- คืน banner เครดิตเดิม: `OPD - ER` / `conceived, designed, and` / `Brought to Life by RN.Patipon Wiyo`
-
-## Run
+## เริ่มต้น
 
 ```bash
 npm install
@@ -20,4 +11,22 @@ npm start
 
 เปิด `http://localhost:8787`
 
-ข้อมูลอยู่เฉพาะใน browser profile และเครื่องที่ใช้งานอยู่ ไม่มีการส่งข้อมูลออกไปยังระบบภายนอก
+หากไม่ตั้ง `window.OPD2_BRIDGE_URL` ใน `opd2-config.js` แอปจะใช้ Local Storage หากใส่ URL `/exec` ของ Apps Script Web App แอปจะโหลดข้อมูลห้องจาก Google Sheet ก่อนเริ่มทำงาน
+
+## ข้อมูลที่ซิงก์
+
+- รายชื่อบุคลากรและตำแหน่ง แยกตาม `unitId::clinicName`
+- หน้าที่/ค่า Default ที่ใช้ซ้ำในแต่ละห้อง
+- รายชื่อห้องและหน่วยจากแท็บ `Rooms`
+
+แท็บ `Users` ไม่ได้ใช้ในรุ่น public-link หากมีจากการตั้งค่าก่อนหน้า ปล่อยไว้ได้ ข้อมูลแผนผู้ป่วยและจ่ายงานรายวันยังเป็น Local Storage และไม่ซิงก์ข้ามอุปกรณ์ ดูรายละเอียดและคำเตือนการเปิดเผยข้อมูลใน [คู่มือตั้งค่า Google Sheets ภาษาไทย](./GOOGLE_SHEETS_SETUP_TH.md)
+
+## ไฟล์ Apps Script
+
+คัดลอก `google-apps-script/Code.gs`, `Bridge.html` และ `appsscript.json` ตามคู่มือ ก่อน Deploy แบบ **Execute as owner / Anyone** โปรดเข้าใจว่าผู้ใช้อินเทอร์เน็ตที่เข้าหน้าเว็บสามารถอ่านและแก้รายชื่อของทุกห้องได้
+
+## ตรวจสอบโค้ด
+
+```bash
+npm run check
+```

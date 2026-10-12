@@ -161,8 +161,8 @@
 
     <aside class="privacy">
       <div class="privacy-icon" aria-hidden="true">!</div>
-      <div><strong>ข้อมูลจัดเก็บในเบราว์เซอร์เครื่องนี้เท่านั้น</strong><p>ข้อมูลไม่ซิงก์ข้ามผู้ใช้หรืออุปกรณ์ โปรดใช้ชื่อและตัวเลขจำลอง และอย่ากรอกชื่อผู้ป่วย เลข HN หรือข้อมูลส่วนบุคคล</p></div>
-      <span class="tag">Local Storage</span>
+      <div><strong>รายชื่อซิงก์ตามห้องเมื่อเชื่อม Google Sheet</strong><p>ทุกคนที่เปิดเว็บได้สามารถดูและแก้ทะเบียนทุกห้องได้ แม้ Google Sheet จะเป็นส่วนตัว แผนรายวันยังอยู่ในเบราว์เซอร์นี้ ห้ามกรอกชื่อผู้ป่วย เลข HN หรือข้อมูลสุขภาพ</p></div>
+      <span class="tag">Local + Google Sheet</span>
     </aside>
 
     <div class="layout">
@@ -181,13 +181,13 @@
           </article>
           <article class="card step">
             <div class="step-head"><span class="number">03</span><h2>เพิ่มรายชื่อทีมในพื้นที่</h2></div>
-            <p>ไปที่ “จัดการเจ้าหน้าที่” เพิ่มด้วยชื่อสมมติและตำแหน่ง</p>
-            <ul><li>ตำแหน่งที่รองรับ: <span class="pill">HN</span><span class="pill">Incharge</span><span class="pill">RN</span><span class="pill">PN</span><span class="pill">HP</span></li><li>ใช้ “แก้ไข” เปลี่ยนชื่อ/ตำแหน่งได้โดยไม่ต้องลบ; กด “ลบ” เมื่อต้องการนำชื่อออก</li><li>รายชื่อแยกตามหน่วย/ห้องตรวจ; เพิ่มทีมแยกกันในแต่ละพื้นที่</li></ul>
+            <p>ไปที่ “จัดการเจ้าหน้าที่” แล้วเพิ่มชื่อและตำแหน่งของบุคลากรในห้องที่เลือก หากเชื่อม Google Sheet แล้วระบบจะจำรายชื่อไว้ให้สัปดาห์ถัดไปและเมื่อเปลี่ยนเครื่อง</p>
+            <ul><li>ตำแหน่งที่รองรับ: <span class="pill">HN</span><span class="pill">Incharge</span><span class="pill">RN</span><span class="pill">PN</span><span class="pill">HP</span></li><li>ใช้ “แก้ไข” เปลี่ยนชื่อ/ตำแหน่งได้; กด “ลบ” เมื่อต้องการนำชื่อออกจากห้องนี้</li><li>รายชื่อแยกตามหน่วย/ห้องตรวจ หัวหน้าแต่ละห้องดูแลรายการของห้องที่ได้รับสิทธิ์</li></ul>
           </article>
           <article class="card step">
             <div class="step-head"><span class="number">04</span><h2>จ่ายงานและสถานะรายวัน</h2></div>
             <p>เลือกวันใน “ตารางจ่ายงานรายบุคคล” แล้วตั้งข้อมูลของเจ้าหน้าที่แต่ละคน</p>
-            <ul><li>เลือกสถานะ <span class="pill">ปฏิบัติงาน</span><span class="pill">VAC = ลา</span><span class="pill">ประชุม/อบรม</span><span class="pill">Float ออก</span><span class="pill">ใช้ ชม.</span></li><li>เลือกหน้าที่/เวลา (พิมพ์ช่วงเช่น 8-12), เวลาพัก, ปภ.1/2, Code อัคคีภัย/CPR, เวลาเข้าและหมายเหตุ</li><li>“เพิ่มหน้าที่” เพิ่มรายการ; “ใช้ Default” นำรูปแบบที่บันทึกล่าสุดมาใช้กับวันนั้น</li></ul>
+            <ul><li>เลือกสถานะ <span class="pill">ปฏิบัติงาน</span><span class="pill">VAC = ลา</span><span class="pill">ประชุม/อบรม</span><span class="pill">Float ออก</span><span class="pill">ใช้ ชม.</span></li><li>เลือกหน้าที่/เวลา (พิมพ์ช่วงเช่น 8-12), เวลาพัก, ปภ.1/2, Code อัคคีภัย/CPR, เวลาเข้าและหมายเหตุ</li><li>“เพิ่มหน้าที่” เพิ่มรายการ; “ใช้ Default” เริ่มจากหน้าที่/ค่าประจำล่าสุดของห้อง สถานะเฉพาะวัน เช่น ลา/อบรม/Float ไม่ควรถูกใช้แทนข้อมูลของวันถัดไป</li></ul>
           </article>
         </div>
       </section>
@@ -219,7 +219,7 @@
               <div class="test-item"><span class="check">✓</span><span>ลองวันหยุดและดูผลที่เปลี่ยน</span></div>
               <div class="test-item"><span class="check">✓</span><span>เปิด Dashboard หรือสร้าง PDF</span></div>
             </div>
-            <div class="reset-note"><b>ก่อนรีเซ็ต:</b> “รีเซ็ตสัปดาห์นี้” ล้างแผนผู้รับบริการของสัปดาห์ที่เลือก ส่วน “คืนค่าเริ่มต้น” ล้างข้อมูล Local Storage ทั้งหมดในเบราว์เซอร์นี้</div>
+            <div class="reset-note"><b>ก่อนรีเซ็ต:</b> “รีเซ็ตสัปดาห์นี้” ล้างแผนผู้รับบริการของสัปดาห์ที่เลือก ส่วน “คืนค่าเริ่มต้น” ล้างข้อมูลชั่วคราวในเบราว์เซอร์นี้ ไม่ลบรายชื่อที่บันทึกไว้ใน Google Sheet</div>
           </section>
         </div>
       </aside>

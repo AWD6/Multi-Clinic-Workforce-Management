@@ -54,8 +54,8 @@
           <div class="privacy-note">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.3-2.8 8.1-7 9.7C7.8 19.1 5 15.3 5 11V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
             <div>
-              <strong>พร้อมสำหรับการเปิดคลินิก</strong>
-              <span>ข้อมูลเก็บในเบราว์เซอร์เครื่องนี้ ใช้งานในเครื่องนี้ด้วย Local Storage</span>
+              <strong>ข้อมูลแยกตามห้องตรวจ</strong>
+              <span>รายชื่อประจำห้องจะซิงก์เมื่อเชื่อม Google Sheet</span>
             </div>
           </div>
           <button class="reset-link" id="resetAll">
@@ -76,6 +76,7 @@
             <strong>Workforce Management</strong>
           </div>
           <div class="breadcrumb">ระบบจัดสรรกำลังคน <span>/</span> Multi Clinic Workforce Management</div>
+          <span class="cloud-status" id="storageStatus" data-state="local">กำลังตรวจสอบข้อมูล…</span>
           <div class="updated-time">
             <span>อัปเดตล่าสุด วันนี้ <strong id="liveClock">--:--</strong></span>
           </div>
@@ -227,7 +228,7 @@
             </div>
           </section>
 
-          <footer class="footer"><span>Multi Clinic Workforce Management</span><span>ข้อมูลจัดเก็บใน Local Storage เท่านั้น</span></footer>
+          <footer class="footer"><span>Multi Clinic Workforce Management</span><span>รายชื่อประจำห้องซิงก์เมื่อเชื่อม Google Sheet · แผนรายวันยังอยู่ในเบราว์เซอร์นี้</span></footer>
         </div>
       </main>
     </div>
@@ -249,6 +250,16 @@
     <script src="html2canvas.min.js"></script>
     <script src="opd2-config.js"></script>
     <script src="opd2-data-store.js"></script>
-    <script src="script.js"></script>
+    <script>
+      window.__OPD2_DATA_READY__.then(() => {
+        const app = document.createElement("script");
+        app.src = "script.js";
+        document.body.appendChild(app);
+      }).catch((error) => {
+        const status = document.getElementById("storageStatus");
+        if (status) status.textContent = `เริ่มระบบไม่ได้: ${error.message} · ติดต่อผู้ดูแลระบบ`;
+        console.error("[OPD2] โหลดข้อมูลเริ่มต้นไม่สำเร็จ", error);
+      });
+    </script>
   </body>
 </html>
