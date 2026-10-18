@@ -1,10 +1,17 @@
 # Changes
 
-## Multi Clinic Workforce Management / Original UI
+## แชร์ข้อมูลทุกห้องและ Dashboard
+
+- ซิงก์แผนผู้ป่วยรายสัปดาห์และการจ่ายงานรายวันผ่านแท็บ `WorkforceData`
+- เก็บแต่ละสัปดาห์และแต่ละวันแยกแถวตามหน่วย/ห้อง เพื่อรองรับประวัติหลายช่วงเวลา
+- ขยาย Dashboard ทุกหน่วยให้แสดง Product จริง เปอร์เซ็นต์จ่ายงาน ลา อบรม/ประชุม ใช้ ชม. และ Float
+- กด Detail เพื่อเปิดรายชื่อ สถานะ หน้าที่ เวลา จุด Code และหมายเหตุแยกตามวัน
+- รองรับย้ายข้อมูลตารางเดิมจาก Local Storage ขึ้นชีตเมื่อเชื่อมครั้งแรก
+
+## ประวัติ: Multi Clinic Workforce Management / Original UI
 
 - ยึด layout, ตาราง, ลำดับข้อมูล และ typography จากไฟล์ต้นฉบับ
-- ลบ Google Sheets, remote database และ realtime backend ออก
-- ใช้ Local Storage เท่านั้น
+- รุ่นในประวัตินี้เคยใช้ Local Storage เท่านั้น; รุ่นปัจจุบันซิงก์ผ่าน Google Sheets ตามคู่มือตั้งค่า
 - เพิ่ม dropdown หน่วยตรวจ/ห้องตรวจ
 - เพิ่มเจ้าหน้าที่ไม่จำกัดและระบบ Default
 - เพิ่ม Float/ใช้ ชม. แบบช่วงเวลาและคำนวณชั่วโมง

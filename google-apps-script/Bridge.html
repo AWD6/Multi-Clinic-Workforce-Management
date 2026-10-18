@@ -29,6 +29,13 @@
             .withFailureHandler((error) => failed(message.id, error))
             .saveRoomCollection(payload.scope, payload.collection, payload.value);
         }
+        if (message.type === "OPD2_CALL" && message.action === "saveRoomRecords") {
+          const payload = message.payload || {};
+          google.script.run
+            .withSuccessHandler((data) => reply({ type: "OPD2_RESULT", id: message.id, ok: true, data }))
+            .withFailureHandler((error) => failed(message.id, error))
+            .saveRoomRecords(payload.scope, payload.collection, payload.records);
+        }
       });
       window.addEventListener("load", () => reply({ type: "OPD2_BRIDGE_READY" }));
     </script>

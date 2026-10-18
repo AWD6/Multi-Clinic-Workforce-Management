@@ -1,14 +1,16 @@
 const OPD2_CONFIG = {
   // ใส่ Spreadsheet ID จาก URL ของ Google Sheet ระหว่าง /d/ และ /edit
-  SPREADSHEET_ID: "PASTE_SPREADSHEET_ID_HERE",
+  SPREADSHEET_ID: "1PIcoh6387SwCd-1toyeHaUzllhUCM7jNHmfJEaYTxe8",
   // origin ของ GitHub Pages เช่น https://awd6.github.io (ไม่ใส่ path ต่อท้าย)
-  ALLOWED_PARENT_ORIGIN: "https://YOUR_GITHUB_OWNER.github.io",
+  ALLOWED_PARENT_ORIGIN: "https://awd6.github.io",
   ROOMS_SHEET: "Rooms",
-  DATA_SHEET: "RoomData"
+  DATA_SHEET: "RoomData",
+  WORKFORCE_SHEET: "WorkforceData"
 };
 
 const ROOM_HEADERS = ["unitId", "clinicName", "unitName", "active"];
 const DATA_HEADERS = ["unitId", "clinicName", "staffJson", "defaultsJson", "updatedAt", "updatedBy"];
+const WORKFORCE_HEADERS = ["unitId", "clinicName", "collection", "recordKey", "dataJson", "updatedAt", "updatedBy"];
 const ROOM_DEFINITIONS = [
   ["u4", "OPD 9", "หน่วยตรวจที่ 4", true],
   ["u4", "OPD 21", "หน่วยตรวจที่ 4", true],
@@ -34,7 +36,8 @@ function setupDatabase() {
     roomsSheet.setFrozenRows(1);
   }
   ensureSheet_(ss, OPD2_CONFIG.DATA_SHEET, DATA_HEADERS);
-  return "สร้างแท็บ Rooms และ RoomData เรียบร้อยแล้ว";
+  ensureSheet_(ss, OPD2_CONFIG.WORKFORCE_SHEET, WORKFORCE_HEADERS);
+  return "สร้างแท็บ Rooms, RoomData และ WorkforceData เรียบร้อยแล้ว";
 }
 
 /** หน้า bridge ที่ GitHub Pages ฝังไว้เพื่อส่งคำสั่งข้ามโดเมน */
@@ -46,7 +49,7 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-/** โหลดรายชื่อจากทุกห้องที่เปิดใช้งาน */
+/** โหลดรายชื่อ แผน และตารางจ่ายงานจากทุกห้องที่เปิดใช้งาน */
 function getBootstrapData() {
   const ss = openDatabase_();
   const roomsSheet = ensureSheet_(ss, OPD2_CONFIG.ROOMS_SHEET, ROOM_HEADERS);
@@ -65,12 +68,29 @@ function getBootstrapData() {
   const dataSheet = ensureSheet_(ss, OPD2_CONFIG.DATA_SHEET, DATA_HEADERS);
   const values = dataSheet.getDataRange().getValues();
   const rooms = {};
-  scopes.forEach((scope) => { rooms[scope] = { staff: [], defaults: {} }; });
+  scopes.forEach((scope) => { rooms[scope] = { staff: [], defaults: {}, plans: {}, assignments: {} }; });
   for (let r = 1; r < values.length; r += 1) {
     const row = values[r];
     const scope = scopeKey_(row[0], row[1]);
     if (!Object.prototype.hasOwnProperty.call(rooms, scope)) continue;
-    rooms[scope] = { staff: parseJsonCell_(row[2], []), defaults: parseJsonCell_(row[3], {}) };
+    rooms[scope].staff = parseJsonCell_(row[2], []);
+    rooms[scope].defaults = parseJsonCell_(row[3], {});
+  }
+
+  const workforceSheet = ensureSheet_(ss, OPD2_CONFIG.WORKFORCE_SHEET, WORKFORCE_HEADERS);
+  const workforceRows = workforceSheet.getDataRange().getValues();
+  for (let r = 1; r < workforceRows.length; r += 1) {
+    const row = workforceRows[r];
+    const scope = scopeKey_(row[0], row[1]);
+    if (!Object.prototype.hasOwnProperty.call(rooms, scope)) continue;
+    const collection = String(row[2] || "");
+    const property = collection === "clinic-plans" ? "plans" : collection === "clinic-assignments" ? "assignments" : "";
+    const keyPrefix = collection === "clinic-plans" ? "week:" : collection === "clinic-assignments" ? "day:" : "";
+    const storedKey = String(row[3] || "").trim();
+    if (!property || !storedKey.startsWith(keyPrefix)) continue;
+    const recordKey = storedKey.slice(keyPrefix.length);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(recordKey)) continue;
+    rooms[scope][property][recordKey] = parseJsonCell_(row[4], null);
   }
   return { scopes, rooms, units };
 }
@@ -107,6 +127,63 @@ function saveRoomCollection(scope, collection, value) {
     sheet.getRange(rowNumber, 5, 1, 2).setValues([[new Date(), "public-link"]]);
     SpreadsheetApp.flush();
     return { ok: true, savedAt: new Date().toISOString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** บันทึกแผนรายสัปดาห์และการจ่ายงานแยกเป็นแถวตามห้องและวัน */
+function saveRoomRecords(scope, collection, records) {
+  const parts = parseScope_(scope);
+  if (!isKnownActiveRoom_(parts.unitId, parts.clinicName)) throw new Error("ไม่พบห้องตรวจนี้หรือห้องถูกปิดใช้งาน");
+  if (!["clinic-plans", "clinic-assignments"].includes(collection)) throw new Error("ไม่อนุญาตให้บันทึกข้อมูลประเภทนี้");
+  if (!Array.isArray(records) || records.length > 100) throw new Error("รูปแบบชุดข้อมูลจ่ายงานไม่ถูกต้อง");
+
+  const seenKeys = new Set();
+  const normalized = records.map((record) => {
+    if (!record || typeof record !== "object") throw new Error("รูปแบบรายการจ่ายงานไม่ถูกต้อง");
+    const key = String(record && record.key || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) throw new Error("รหัสวันหรือสัปดาห์ไม่ถูกต้อง");
+    if (seenKeys.has(key)) throw new Error("พบรหัสวันหรือสัปดาห์ซ้ำในชุดข้อมูล");
+    seenKeys.add(key);
+    const value = record.value;
+    if (value !== null) {
+      const validPlan = collection === "clinic-plans" && Array.isArray(value);
+      const validAssignments = collection === "clinic-assignments" && value && typeof value === "object" && !Array.isArray(value);
+      if (!validPlan && !validAssignments) throw new Error("รูปแบบแผนหรือข้อมูลจ่ายงานไม่ถูกต้อง");
+      const json = JSON.stringify(value);
+      if (json.length > 45000) throw new Error("ข้อมูลประจำวันมีขนาดเกินข้อจำกัดของ Google Sheets");
+      return { key, json };
+    }
+    return { key, json: null };
+  });
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sheet = ensureSheet_(openDatabase_(), OPD2_CONFIG.WORKFORCE_SHEET, WORKFORCE_HEADERS);
+    const rows = sheet.getDataRange().getValues();
+    const targetRows = new Map();
+    const keyPrefix = collection === "clinic-plans" ? "week:" : "day:";
+    for (let r = 1; r < rows.length; r += 1) {
+      if (scopeKey_(rows[r][0], rows[r][1]) !== scope || String(rows[r][2]) !== collection) continue;
+      targetRows.set(String(rows[r][3]), r + 1);
+    }
+    const deleteRows = [];
+    normalized.forEach((record) => {
+      const storedKey = `${keyPrefix}${record.key}`;
+      const rowNumber = targetRows.get(storedKey);
+      if (record.json === null) {
+        if (rowNumber) deleteRows.push(rowNumber);
+      } else if (rowNumber) {
+        sheet.getRange(rowNumber, 5, 1, 3).setValues([[record.json, new Date(), "public-link"]]);
+      } else {
+        sheet.appendRow([parts.unitId, parts.clinicName, collection, storedKey, record.json, new Date(), "public-link"]);
+      }
+    });
+    deleteRows.sort((a, b) => b - a).forEach((rowNumber) => sheet.deleteRow(rowNumber));
+    SpreadsheetApp.flush();
+    return { ok: true, savedAt: new Date().toISOString(), records: normalized.length };
   } finally {
     lock.releaseLock();
   }

@@ -1,6 +1,6 @@
 # วิธีเผยแพร่บน GitHub Pages
 
-เว็บหลักยังเป็น static site บน GitHub Pages เช่นเดิม หากต้องการซิงก์รายชื่อบุคลากรข้ามเครื่อง ให้ตั้ง Google Sheet + Apps Script bridge ตาม [คู่มือตั้งค่า Google Sheets ภาษาไทย](./GOOGLE_SHEETS_SETUP_TH.md) แล้ววาง URL `/exec` ใน `opd2-config.js` ก่อน deploy
+เว็บหลักยังเป็น static site บน GitHub Pages เช่นเดิม หากต้องการซิงก์ข้อมูลห้องตรวจและ Dashboard ข้ามเครื่อง ให้ตั้ง Google Sheet + Apps Script bridge ตาม [คู่มือตั้งค่า Google Sheets ภาษาไทย](./GOOGLE_SHEETS_SETUP_TH.md) แล้ววาง URL `/exec` ใน `opd2-config.js` ก่อน deploy
 
 ## ขั้นตอน
 
@@ -14,7 +14,7 @@
 
 ## ข้อจำกัดของข้อมูล
 
-หากเว้น `OPD2_BRIDGE_URL` ว่าง แอปจะเก็บข้อมูลใน browser profile นี้เท่านั้น เมื่อกำหนด URL Apps Script แล้ว รายชื่อบุคลากรและค่า Default จะซิงก์กับ Google Sheet แยกตามห้อง ส่วนแผนผู้ป่วยและตารางจ่ายงานรายวันยังไม่ซิงก์ข้ามเครื่องในรุ่นนี้ รุ่น public-link ตั้งใจให้ทุกคนที่เปิดเว็บอ่านและแก้ทะเบียนทุกห้องได้ แม้ Google Sheet เองยังคงตั้งเป็นส่วนตัว โปรดอ่านคำเตือนในคู่มือตั้งค่าก่อน Deploy
+หากเว้น `OPD2_BRIDGE_URL` ว่าง แอปจะเก็บข้อมูลใน browser profile นี้เท่านั้น เมื่อกำหนด URL Apps Script แล้ว รายชื่อ ค่า Default แผนผู้ป่วยรายสัปดาห์ และตารางจ่ายงานรายวันจะซิงก์กับ Google Sheet แยกตามห้อง Dashboard จึงเปิดดูภาพรวมและรายละเอียดจ่ายงานทุกห้องจากอุปกรณ์อื่นได้ สิทธิ์ขึ้นกับ Apps Script deployment; หากเลือก `Anyone` ทุกคนที่มีลิงก์อ่านและแก้ข้อมูลทุกห้องได้ โปรดอ่านคำเตือนในคู่มือตั้งค่าก่อน Deploy
 
 ## ถ้า workflow ไม่เริ่มทำงาน
 
