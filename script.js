@@ -170,11 +170,11 @@ function renderAllUnitsSummary() {
     const staff = staffForScope(key);
     const plans = allPlans[`${key}::${weekKey()}`] || makeDays();
     const active = plans.filter((plan) => !plan.holiday);
-    const daily = active.map((plan) => ({ plan, list: Object.values(allAssignments[`${key}::${plan.date}`] || {}) }));
-    const allDaily = plans.map((plan) => ({ plan, list: Object.values(allAssignments[`${key}::${plan.date}`] || {}) }));
+    const activeStaffIds = new Set(staff.map((person) => String(person.id)));
+    const daily = active.map((plan) => ({ plan, list: Object.values(allAssignments[`${key}::${plan.date}`] || {}).filter((person) => person && activeStaffIds.has(String(person.id))) }));
     const allPeople = daily.flatMap((day) => day.list);
     const assignedPeople = new Set(allPeople.map((person) => person.id)).size;
-    const staffCount = staff.length || assignedPeople;
+    const staffCount = staff.length;
     const assignedPercent = staffCount ? Math.round((assignedPeople / staffCount) * 100) : 0;
     const forecast = active.reduce((sum, plan) => sum + clamp(plan.forecast), 0);
     const products = daily.map(({ plan, list }) => product(plan, list)).filter((value) => value !== null && Number.isFinite(value));
@@ -186,7 +186,7 @@ function renderAllUnitsSummary() {
       return sum;
     }, { people: 0, leave: 0, training: 0, float: 0, useHours: 0, removedHours: 0 });
     const index = details.length;
-    details.push({ unit, clinic, forecast, staffCount, assignedPeople, assignedPercent, averageProduct, weeklyAllocation, roleTotals, activeDays: active.length, days: allDaily });
+    details.push({ unit, clinic, forecast, staffCount, assignedPeople, assignedPercent, averageProduct, weeklyAllocation, roleTotals, activeDays: active.length });
     return `<article class="scope-summary ${key === scopeKey() ? "is-selected" : ""}"><header class="scope-summary-header"><div class="scope-title"><h3>${esc(clinic)}</h3></div><button type="button" class="summary-detail-button" data-summary-index="${index}" aria-expanded="false">Detail <span>＋</span></button></header><div class="scope-summary-metrics"><div class="summary-metric forecast"><b>${forecast.toLocaleString("th-TH")}</b><span>ผู้ป่วยคาดการณ์</span></div><div class="summary-metric staff"><b>${staffCount}</b><span>เจ้าหน้าที่</span></div><div class="summary-metric product"><b>${averageProduct === null ? "—" : `${averageProduct}%`}</b><span>Product เฉลี่ย · ${productDisplay(averageProduct)}</span></div><div class="summary-metric assigned"><b>${assignedPercent}%</b><span>จ่ายงานแล้ว · ${assignedPeople}/${staffCount} คน</span></div></div><div class="summary-submetrics"><span>ลา <b>${weeklyAllocation.leave}</b> คน-วัน</span><span>อบรม/ประชุม <b>${weeklyAllocation.training}</b> ชม.</span><span>ใช้ ชม. <b>${weeklyAllocation.useHours}</b> ชม.</span><span>Float <b>${weeklyAllocation.float}</b> ชม.</span></div><div class="summary-detail-panel" data-summary-detail="${index}" hidden></div></article>`;
   };
   const html = UNITS.map((unit) => `<section class="unit-summary-group"><header class="unit-summary-header"><span class="unit-summary-kicker">หน่วยตรวจ</span><h3>${esc(unit.name)}</h3><span>${unit.clinics.length} ห้องตรวจในสังกัด</span></header><div class="unit-summary-rooms">${unit.clinics.map((clinic) => roomCard(unit, clinic)).join("")}</div></section>`).join("");
@@ -199,21 +199,15 @@ function renderAllUnitsSummary() {
     if (!panel) return;
     if (panel.hidden) {
       const a = detail.weeklyAllocation;
-      const roleBlock = (label, value) => `<div class="detail-role-block"><strong>${label}</strong><span>ลา <b>${value.leave} คน-วัน</b></span><span>อ/ป <b>${value.training} ชม.</b></span><span>Float <b>${value.float} ชม.</b></span><span>ใช้ ชม. <b>${value.useHours} ชม.</b></span></div>`;
-      const dayHtml = detail.days.map(({ plan, list }) => {
-        const allocation = allocationFor(list);
-        const productValue = product(plan, list);
-        const personRows = list.length ? list.map((person) => {
-          const tasks = (Array.isArray(person.tasks) ? person.tasks : []).map((task) => `${typeof task === "string" ? task : task.task || "หน้าที่"}${typeof task === "string" || !task.time ? "" : ` · ${task.time}`}`).join(" / ");
-          const fire = Array.isArray(person.fireCodes) ? person.fireCodes.join(" · ") : "";
-          const cpr = Array.isArray(person.cprCodes) ? person.cprCodes.join(" · ") : "";
-          const statusClass = person.status === "VAC = ลา" ? "leave" : person.status === "ประชุม/อบรม" ? "training" : person.status === "Float ออก" ? "float" : person.status === "ใช้ ชม." ? "use" : "work";
-          const statusDetail = person.statusValue ? ` · ${person.statusValue}` : "";
-          return `<article class="summary-assignment"><div class="summary-assignment-person"><strong>${esc(person.name || "ไม่ระบุชื่อ")}</strong><span>${esc(person.role || "-")}</span><em class="summary-status ${statusClass}">${esc(person.status || "ปฏิบัติงาน")}${esc(statusDetail)}</em></div><div class="summary-assignment-task"><b>หน้าที่</b><span>${esc(tasks || "ยังไม่ระบุ")}</span></div><div class="summary-assignment-meta"><span>พัก ${esc(person.break || "-")}</span><span>จุด ${esc(person.location || "-")}</span><span>มา ${esc(person.arrival || "-")}</span><span>อัคคีภัย ${esc(fire || "-")}</span><span>CPR ${esc(cpr || "-")}</span>${person.note ? `<span>หมายเหตุ ${esc(person.note)}</span>` : ""}</div></article>`;
-        }).join("") : `<div class="summary-empty-day">ยังไม่มีข้อมูลการจ่ายงาน</div>`;
-        return `<section class="summary-day-card ${plan.holiday ? "is-holiday" : ""}"><header><div><strong>${esc(plan.label)} · ${toThaiDate(new Date(`${plan.date}T00:00:00`))}</strong>${plan.holiday ? `<span class="summary-holiday-label">วันหยุด</span>` : ""}</div><div class="summary-day-kpis"><span>คาดการณ์ <b>${plan.holiday ? "—" : clamp(plan.forecast).toLocaleString("th-TH")}</b></span><span>Product <b>${productDisplay(productValue)}</b></span></div></header><div class="summary-day-allocation"><span>จ่ายงาน ${list.length} คน</span><span>ลา ${allocation.leave} คน</span><span>อบรม/ประชุม ${allocation.training} ชม.</span><span>ใช้ ชม. ${allocation.useHours} ชม.</span><span>Float ${allocation.float} ชม.</span><span>หัก Product ${allocation.removedHours} ชม.</span></div><div class="summary-assignment-list">${personRows}</div></section>`;
-      }).join("");
-      panel.innerHTML = `<div class="summary-detail-heading"><strong>รายละเอียดการจัดสรร · ${esc(detail.unit.name)} / ${esc(detail.clinic)}</strong><span>${detail.activeDays} วันทำการ</span></div><div class="summary-detail-grid"><div><b>${detail.forecast.toLocaleString("th-TH")}</b><span>ยอดผู้ป่วยคาดการณ์</span></div><div><b>${detail.staffCount}</b><span>กำลังคนทั้งหมด</span></div><div><b>${detail.assignedPercent}%</b><span>จ่ายงานแล้ว ${detail.assignedPeople}/${detail.staffCount} คน</span></div>${roleBlock("Nurse", detail.roleTotals.nurse)}${roleBlock("PN", detail.roleTotals.pn)}${roleBlock("HP", detail.roleTotals.hp)}<div><b>${productDisplay(detail.averageProduct)}</b><span>Product เฉลี่ย</span></div><div><b>${a.removedHours}</b><span>ชม. หักจาก Product</span></div></div><div class="summary-detail-footnote">สถานะรายบุคคล หน้าที่ จุดปฏิบัติงาน เวลา และ Code แสดงแยกตามวัน</div><div class="summary-week-details">${dayHtml}</div>`;
+      const roleBlock = (label, value) => {
+        const stat = (title, field, unit) => {
+          const amount = value[field] || 0;
+          const weekdays = value.days[field] || [];
+          return `<div class="summary-role-stat ${field}"><span>${title}</span><b class="${amount > 0 ? "is-nonzero" : "is-zero"}">${amount.toLocaleString("th-TH")}</b><small>${unit}${weekdays.length ? ` (${weekdays.join(", ")})` : ""}</small></div>`;
+        };
+        return `<section class="detail-role-block"><strong>${label}</strong><div class="summary-role-stat-grid">${stat("ลา", "leave", "คน-วัน")}${stat("อ/ป", "training", "ชม.")}${stat("Float", "float", "ชม.")}${stat("ใช้ ชม.", "useHours", "ชม.")}</div></section>`;
+      };
+      panel.innerHTML = `<div class="summary-detail-heading"><strong>รายละเอียดการจัดสรร · ${esc(detail.unit.name)} / ${esc(detail.clinic)}</strong><span>${detail.activeDays} วันทำการ</span></div><div class="summary-detail-grid"><div><b class="${detail.forecast > 0 ? "is-nonzero" : "is-zero"}">${detail.forecast.toLocaleString("th-TH")}</b><span>ยอดผู้ป่วยคาดการณ์</span></div><div><b class="${detail.staffCount > 0 ? "is-nonzero" : "is-zero"}">${detail.staffCount}</b><span>กำลังคนทั้งหมด</span></div><div><b class="${detail.assignedPercent > 0 ? "is-nonzero" : "is-zero"}">${detail.assignedPercent}%</b><span>จ่ายงานแล้ว ${detail.assignedPeople}/${detail.staffCount} คน</span></div><div><b class="${detail.averageProduct > 0 ? "is-nonzero" : "is-zero"}">${detail.averageProduct === null ? "—" : `${detail.averageProduct}%`}</b><span>Product เฉลี่ย</span></div><div><b class="${a.removedHours > 0 ? "is-nonzero" : "is-zero"}">${a.removedHours}</b><span>ชม. หักจาก Product</span></div></div><div class="summary-week-role-grid">${roleBlock("Nurse", detail.roleTotals.nurse)}${roleBlock("PN", detail.roleTotals.pn)}${roleBlock("HP", detail.roleTotals.hp)}</div>`;
       panel.hidden = false; button.setAttribute("aria-expanded", "true"); button.innerHTML = "ปิด Detail <span>−</span>";
     } else { panel.hidden = true; button.setAttribute("aria-expanded", "false"); button.innerHTML = "Detail <span>＋</span>"; }
   }));
@@ -221,7 +215,23 @@ function renderAllUnitsSummary() {
 function allocationRole(role) { return ["RN", "HN", "Incharge"].includes(role) ? "nurse" : role === "PN" ? "pn" : "hp"; }
 function roleAllocation(list, role) { return allocationFor(list.filter((person) => allocationRole(person.role) === role)); }
 function allocationRoleCell(list, role) { const value = roleAllocation(list, role); return `<div class="allocation-role-cell role-${role}"><strong>${role === "nurse" ? "Nurse" : role.toUpperCase()}</strong><span><em>ลา</em><b>${value.leave} คน</b></span><span><em>อ/ป</em><b>${value.training} ชม.</b></span><span><em>Float</em><b>${value.float} ชม.</b></span><span><em>ใช้ ชม.</em><b>${value.useHours} ชม.</b></span></div>`; }
-function aggregateRoleStats(daily) { return ["nurse", "pn", "hp"].reduce((result, role) => { result[role] = daily.reduce((sum, day) => { const value = roleAllocation(day.list, role); Object.keys(sum).forEach((field) => { sum[field] += value[field] || 0; }); return sum; }, { people: 0, leave: 0, training: 0, float: 0, useHours: 0, removedHours: 0 }); return result; }, {}); }
+function shortWeekday(dateValue) { return ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"][new Date(`${dateValue}T00:00:00`).getDay()]; }
+function aggregateRoleStats(daily) {
+  const fields = ["leave", "training", "float", "useHours"];
+  return ["nurse", "pn", "hp"].reduce((result, role) => {
+    const total = { leave: 0, training: 0, float: 0, useHours: 0, days: { leave: [], training: [], float: [], useHours: [] } };
+    daily.forEach(({ plan, list }) => {
+      const value = roleAllocation(list, role);
+      fields.forEach((field) => {
+        total[field] += value[field] || 0;
+        const day = shortWeekday(plan.date);
+        if (value[field] > 0 && !total.days[field].includes(day)) total.days[field].push(day);
+      });
+    });
+    result[role] = total;
+    return result;
+  }, {});
+}
 function renderAllocation() { const list = assignmentsForDate(); const allocation = allocationFor(list); const rows = plansForScope().map((plan) => { const dayList = assignmentsForDate(plan.date); return `<div class="table-row staffing-row staffing-columns ${plan.holiday ? "is-holiday" : ""}"><div class="allocation-day"><b>${esc(plan.label)}</b><small>${toThaiDate(new Date(`${plan.date}T00:00:00`))}</small></div>${allocationRoleCell(dayList, "nurse")}${allocationRoleCell(dayList, "pn")}${allocationRoleCell(dayList, "hp")}</div>`; }).join(""); document.getElementById("staffingRows").innerHTML = rows; document.getElementById("allocationSummary").innerHTML = `<div class="allocation-kpi"><b>${allocation.people}</b><span>คนที่จ่ายงาน</span></div><div class="allocation-kpi"><b>${allocation.leave}</b><span>คนลา</span></div><div class="allocation-kpi"><b>${allocation.training}</b><span>ชม. ประชุม/อบรม</span></div><div class="allocation-kpi"><b>${allocation.float}</b><span>ชม. Float ออก</span></div><div class="allocation-kpi"><b>${allocation.useHours}</b><span>ชม. ใช้ ชม.</span></div><div class="allocation-kpi emphasis"><b>${allocation.removedHours}</b><span>ชม. หักจาก Product</span></div>`; }
 function renderAll() { renderSelectors(); document.getElementById("weekLabel").textContent = weekLabel(selectedWeek); document.getElementById("weekInput")?.setAttribute("value", toWeekValue(selectedWeek)); renderPlanning(); renderAssignments(); renderStaff(); renderAllocation(); renderMetrics(); renderAllUnitsSummary(); }
 function addStaff(event) {

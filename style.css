@@ -2396,3 +2396,21 @@ select,
 #staff .staff-form.is-editing #staffName{border-color:#d98da3;box-shadow:0 0 0 3px rgba(185,103,126,.1)}
 #staff .staff-form [hidden]{display:none!important}
 @media(max-width:650px){#staff .staff-item-actions button{min-width:54px}#staff .staff-form button{flex:1}}
+
+/* Weekly room allocation summary: compact role totals, with active values and days highlighted. */
+.summary-detail-grid b.is-nonzero{color:#14815f}
+.summary-detail-grid b.is-zero{color:#a4b2ae}
+.summary-week-role-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:10px}
+.summary-week-role-grid .detail-role-block{min-width:0;margin:0}
+.summary-role-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.summary-role-stat{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:3px;padding:7px;border:1px solid rgba(111,183,168,.14);border-radius:8px;background:rgba(255,255,255,.72)}
+.summary-role-stat>span{color:#71847f;font-size:8px;font-weight:700}
+.summary-role-stat>b{font-family:var(--mono);font-size:15px;line-height:1.1}
+.summary-role-stat>b.is-zero{color:#a4b2ae}
+.summary-role-stat.leave>b.is-nonzero{color:#c44f5d}
+.summary-role-stat.training>b.is-nonzero{color:#b37b17}
+.summary-role-stat.float>b.is-nonzero{color:#387db4}
+.summary-role-stat.useHours>b.is-nonzero{color:#7259aa}
+.summary-role-stat>small{color:#71847f;font-size:7px;line-height:1.25}
+@media(max-width:900px){.summary-week-role-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.summary-role-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
