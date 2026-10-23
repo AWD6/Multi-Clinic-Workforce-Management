@@ -2414,3 +2414,34 @@ select,
 .summary-role-stat>small{color:#71847f;font-size:7px;line-height:1.25}
 @media(max-width:900px){.summary-week-role-grid{grid-template-columns:1fr}}
 @media(max-width:650px){.summary-role-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Copy daily assignments from another weekday in the selected room and week. */
+#assignments .assignment-template-toolbar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px 14px;
+  border-color: #efc7d2;
+  background: #fff5f7;
+}
+.assignment-template-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.assignment-template-controls label { color: var(--navy); font-size: 12px; font-weight: 700; }
+.assignment-template-controls select {
+  max-width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #dfb8c4;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--navy);
+  font: inherit;
+}
+.assignment-template-controls select:focus-visible { outline: 2px solid #3b887d; outline-offset: 2px; }
+#assignmentTemplateHint { margin: 0; color: #7d5362; font-size: 11px; line-height: 1.6; }
+#copyAssignmentTemplate:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+@media(max-width:650px) {
+  .assignment-template-controls label { flex-basis: 100%; }
+  .assignment-template-controls select, #copyAssignmentTemplate { width: 100%; }
+}
+@media print { #assignments .assignment-template-toolbar { display: none; } }

@@ -169,6 +169,14 @@
               <div class="assignment-actions"><div class="week-assignment-picker"><span class="week-label">จ่ายงานรายสัปดาห์</span><div id="assignmentWeekLabel"></div><div class="week-day-buttons" id="assignmentDayButtons"></div></div><button class="primary-button compact" id="generatePdfButton">สร้าง PDF รายสัปดาห์</button></div>
             </div>
             <div class="assignment-toolbar forecast-toolbar"><label class="forecast-field">ยอดคาดการณ์ผู้ป่วยวันนี้ <input id="dailyForecast" type="number" min="0" /></label><span>ข้อมูลการจ่ายงานจะถูกจำเป็น Default และนำไปคำนวณกำลังคนอัตโนมัติ</span><button class="secondary-button compact" id="applyDefaultAssignments">ใช้ Default</button></div>
+            <div class="assignment-toolbar assignment-template-toolbar">
+              <div class="assignment-template-controls">
+                <label for="assignmentTemplateSource">คัดลอกการจ่ายงานจาก</label>
+                <select id="assignmentTemplateSource" aria-describedby="assignmentTemplateHint"></select>
+                <button type="button" class="primary-button compact" id="copyAssignmentTemplate" aria-describedby="assignmentTemplateHint" disabled>ใช้แม่แบบ</button>
+              </div>
+              <p id="assignmentTemplateHint">เลือกวันปลายทางด้านบน แล้วเลือกวันต้นแบบในสัปดาห์นี้</p>
+            </div>
 <div class="table-scroll">
               <div class="assignment-table">
                 <div class="assignment-head"><span>ชื่อ / ตำแหน่ง</span><span>สถานะการปฏิบัติงาน</span><span>เวลาพัก</span><span>หน้าที่ / เวลา</span><span>ปภ.1/2</span><span>Code อัคคีภัย / CPR</span><span>เวลามา / หมายเหตุ</span></div>
